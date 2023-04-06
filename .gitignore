@@ -38,3 +38,5 @@ out/
 .env
 /certs
 service-account.json
+
+assets

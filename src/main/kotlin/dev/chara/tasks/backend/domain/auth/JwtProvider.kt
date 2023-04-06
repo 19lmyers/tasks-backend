@@ -89,12 +89,12 @@ class JwtProvider(dotenv: Dotenv) {
     }
 
     companion object {
-        const val ACCESS_SUBJECT = "auth";
+        const val ACCESS_SUBJECT = "auth"
         private const val ACCESS_LIFETIME: Long = 5 //minutes
 
-        const val REFRESH_SUBJECT = "refresh";
+        const val REFRESH_SUBJECT = "refresh"
         private const val REFRESH_LIFETIME: Long = 175 //days
 
-        const val CLAIM_ID = "id";
+        const val CLAIM_ID = "id"
     }
 }

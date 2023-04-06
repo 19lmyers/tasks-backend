@@ -39,10 +39,7 @@ fun Application.module() {
         })
     }
 
-    // TODO is this fixed
-    install(Firebase) {
-        configFilePath = "service-account.json"
-    }
+    install(Firebase)
 
     val jwtProvider by inject<JwtProvider>()
     install(Authentication) {

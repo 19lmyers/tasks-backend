@@ -14,4 +14,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "tasks-api"
+rootProject.name = "tasks-backend"

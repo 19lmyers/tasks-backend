@@ -10,8 +10,8 @@ services:
       - ktor
     restart: always
     secrets:
-      - ssl_cert_cloudflare
       - ssl_public_key_site
+      - ssl_private_key_site
       - ssl_private_key_jwk
   ktor:
     build: .
@@ -30,7 +30,7 @@ services:
       TASKS_AUTH_PUBLIC_KEY_ID: "${TASKS_AUTH_PUBLIC_KEY_ID}"
       TASKS_AUTH_PRIVATE_KEY_PATH: "/run/secrets/ssl_private_key_jwk"
       TASKS_DATA_SOURCE_URL: "jdbc:mariadb://mariadb:3306/tasks"
-      TASKS_BASE_URL: "https://api.tasks.chara.dev"
+      TASKS_BASE_URL: "https://tasks-api.chara.dev"
       TASKS_ASSETS_FOLDER: "/assets"
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
@@ -55,12 +55,10 @@ volumes:
 
 secrets:
   google_service_account:
-    file: service-account.json
-  ssl_cert_cloudflare:
-    file: certs/cloudflare.crt
+    file: /root/.tasks/service-account.json
   ssl_public_key_site:
-    file: certs/public/site.pem
+    file: /root/.tasks/certs/public/origin.pem
   ssl_private_key_site:
-    file: certs/private/site_private.pem
+    file: /root/.tasks/certs/private/origin_private.pem
   ssl_private_key_jwk:
-    file: certs/private/jwk_private.pkcs
+    file: /root/.tasks/certs/private/jwk_private.pkcs

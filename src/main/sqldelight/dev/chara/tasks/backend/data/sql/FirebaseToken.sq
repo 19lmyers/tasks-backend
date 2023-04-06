@@ -1,0 +1,12 @@
+getForUser:
+SELECT *
+FROM FirebaseToken
+WHERE user_id = ?
+LIMIT 1;
+
+update:
+REPLACE INTO FirebaseToken VALUES (?, ?, ?);
+
+invalidate:
+DELETE FROM FirebaseToken
+WHERE fcm_token = ?;

@@ -1,0 +1,71 @@
+import kotlinx.datetime.Instant;
+
+CREATE TABLE IF NOT EXISTS DbMeta (
+    db_version INTEGER PRIMARY KEY NOT NULL DEFAULT 1
+);
+
+INSERT INTO DbMeta
+SELECT 1
+WHERE NOT EXISTS (
+    SELECT * FROM DbMeta
+);
+
+CREATE TABLE IF NOT EXISTS User (
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    hashed_password BLOB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS TaskList (
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+
+    title TEXT NOT NULL,
+
+    is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+
+    last_modified DATETIME AS Instant NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+CREATE TABLE IF NOT EXISTS Task (
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+    list_id VARCHAR(36) NOT NULL,
+
+    label TEXT NOT NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    is_starred BOOLEAN NOT NULL DEFAULT FALSE,
+
+    details TEXT,
+    reminder_date DATETIME AS Instant,
+    due_date DATETIME AS Instant,
+
+    last_modified DATETIME AS Instant NOT NULL,
+
+    reminder_fired DATETIME AS Instant,
+
+    FOREIGN KEY (user_id) REFERENCES User(id),
+    FOREIGN KEY (list_id) REFERENCES TaskList(id)
+);
+
+CREATE VIEW IF NOT EXISTS Reminder AS
+    SELECT DISTINCT u.id AS user_id, t.id AS task_id, l.title AS list_title, t.label AS task_label, t.reminder_date, t.reminder_fired
+    FROM User u, Task t, TaskList l
+    WHERE u.id = t.user_id
+    AND t.list_id = l.id
+    AND t.is_completed = FALSE
+    AND t.reminder_date <= UTC_TIMESTAMP()
+    AND (
+        t.reminder_fired IS NULL
+        OR t.reminder_fired <= t.last_modified
+    );
+
+CREATE TABLE IF NOT EXISTS FirebaseToken (
+    fcm_token VARCHAR(255) PRIMARY KEY NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+    timestamp DATETIME AS Instant NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);

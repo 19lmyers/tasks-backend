@@ -1,0 +1,3 @@
+getVersion:
+SELECT db_version
+FROM DbMeta;

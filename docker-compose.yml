@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  nginx:
+    build: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - ktor
+    restart: always
+    secrets:
+      - ssl_cert_cloudflare
+      - ssl_public_key_site
+      - ssl_private_key_jwk
+  ktor:
+    build: .
+    volumes:
+      - assets:/assets
+    depends_on:
+      - mariadb
+    dns:
+      - 8.8.8.8
+    environment:
+      SMTP_SERVER: "${SMTP_SERVER}"
+      SMTP_PORT: "${SMTP_PORT}"
+      SMTP_LOGIN: "${SMTP_LOGIN}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD}"
+      TASKS_AUTH_ISSUER: "${TASKS_AUTH_ISSUER}"
+      TASKS_AUTH_PUBLIC_KEY_ID: "${TASKS_AUTH_PUBLIC_KEY_ID}"
+      TASKS_AUTH_PRIVATE_KEY_PATH: "/run/secrets/ssl_private_key_jwk"
+      TASKS_DATA_SOURCE_URL: "jdbc:mariadb://mariadb:3306/tasks"
+      TASKS_BASE_URL: "https://api.tasks.chara.dev"
+      TASKS_ASSETS_FOLDER: "/assets"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+    secrets:
+      - google_service_account
+      - ssl_private_key_jwk
+    restart: always
+  mariadb:
+    build: mariadb
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+    restart: always
+
+volumes:
+  assets:
+  db:
+
+secrets:
+  google_service_account:
+    file: service-account.json
+  ssl_cert_cloudflare:
+    file: certs/cloudflare.crt
+  ssl_public_key_site:
+    file: certs/public/site.pem
+  ssl_private_key_site:
+    file: certs/private/site_private.pem
+  ssl_private_key_jwk:
+    file: certs/private/jwk_private.pkcs

@@ -1,0 +1,23 @@
+import dev.chara.tasks.backend.domain.model.TaskList.SortType;
+import dev.chara.tasks.backend.domain.model.TaskList.SortDirection;
+
+ALTER TABLE TaskList
+ADD COLUMN date_created DATETIME AS Instant NOT NULL,
+ADD COLUMN sort_type TEXT AS SortType NOT NULL,
+ADD COLUMN sort_direction TEXT AS SortDirection NOT NULL;
+
+UPDATE TaskList
+SET date_created = UTC_TIMESTAMP(),
+sort_type = 'DATE_CREATED',
+sort_direction = 'ASCENDING',
+last_modified = UTC_TIMESTAMP();
+
+ALTER TABLE Task
+ADD COLUMN date_created DATETIME AS Instant NOT NULL;
+
+UPDATE Task
+SET date_created = UTC_TIMESTAMP(),
+last_modified = UTC_TIMESTAMP();
+
+UPDATE DbMeta
+SET db_version = 2;

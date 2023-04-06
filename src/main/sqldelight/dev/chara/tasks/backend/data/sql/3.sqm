@@ -1,0 +1,8 @@
+ALTER TABLE TaskList
+ADD COLUMN show_index_numbers BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE Task
+ADD COLUMN ordinal INTEGER NOT NULL;
+
+UPDATE DbMeta
+SET db_version = 4;

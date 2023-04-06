@@ -1,0 +1,25 @@
+getByIds:
+SELECT *
+FROM TaskList
+WHERE id = ?
+AND user_id = ?
+LIMIT 1;
+
+getByUser:
+SELECT *
+FROM TaskList
+WHERE user_id = ?;
+
+insert:
+INSERT INTO TaskList VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE TaskList
+SET title = ?, color = ?, icon = ?, description = ?, is_pinned = ?, sort_type = ?, sort_direction = ?, show_index_numbers = ?, last_modified = ?
+WHERE id = ?
+AND user_id = ?;
+
+delete:
+DELETE FROM TaskList
+WHERE id = ?
+AND user_id = ?;

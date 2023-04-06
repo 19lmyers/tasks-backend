@@ -1,0 +1,29 @@
+getById:
+SELECT *
+FROM User
+WHERE id = ?
+LIMIT 1;
+
+getByEmail:
+SELECT *
+FROM User
+WHERE email = ?
+LIMIT 1;
+
+insert:
+INSERT INTO User VALUES (?, ?, ?, ?, ?);
+
+update:
+UPDATE User
+SET display_name = ?, profile_photo_uri = ?
+WHERE id = ?;
+
+updatePhoto:
+UPDATE User
+SET profile_photo_uri = ?
+WHERE id = ?;
+
+updatePassword:
+UPDATE User
+SET hashed_password = ?
+WHERE id = ?;

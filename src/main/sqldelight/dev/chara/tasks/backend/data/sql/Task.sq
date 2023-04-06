@@ -1,0 +1,66 @@
+getByIds:
+SELECT *
+FROM Task
+WHERE id = ?
+AND user_id = ?
+AND list_id = ?
+LIMIT 1;
+
+getByList:
+SELECT *
+FROM Task
+WHERE user_id = ?
+AND list_id = ?;
+
+getMaxOrdinal:
+SELECT MAX(t.ordinal)
+FROM Task t
+WHERE user_id = ?
+AND list_id = ?;
+
+insert:
+INSERT INTO Task VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE Task
+SET label = ?, is_completed = ?, is_starred = ?, details = ?, reminder_date = ?, due_date = ?, last_modified = ?
+WHERE id = ?
+AND user_id = ?
+AND list_id = ?;
+
+move:
+UPDATE Task
+SET list_id = ?, last_modified = ?
+WHERE id = ?
+AND user_id = ?;
+
+reorder {
+   UPDATE Task
+   SET ordinal = ordinal + :difference_sign, last_modified = :last_modified
+   WHERE user_id = :user_id
+   AND list_id = :list_id
+   AND ordinal BETWEEN :lower_bound AND :upper_bound;
+
+   UPDATE Task
+   SET ordinal = :ordinal + 0, last_modified = :last_modified
+   WHERE user_id = :user_id
+   AND list_id = :list_id
+   AND id = :task_id;
+}
+
+delete:
+DELETE FROM Task
+WHERE id = ?
+AND user_id = ?
+AND list_id = ?;
+
+deleteByList:
+DELETE FROM Task
+WHERE user_id = ?
+AND list_id = ?;
+
+clearCompletedByList:
+DELETE FROM Task
+WHERE user_id = ?
+AND list_id = ?
+AND is_completed = TRUE;

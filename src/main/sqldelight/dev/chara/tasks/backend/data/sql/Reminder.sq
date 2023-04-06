@@ -1,0 +1,10 @@
+get:
+SELECT *
+FROM Reminder
+ORDER BY reminder_date ASC;
+
+setFired:
+UPDATE Task
+SET reminder_fired = UTC_TIMESTAMP()
+WHERE user_id = ?
+AND id = ?;

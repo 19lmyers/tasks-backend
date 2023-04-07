@@ -30,6 +30,9 @@ fun Route.fcm() {
             post("/link") {
                 linkFcmToken(userService, firebaseTokenService)
             }
+            post("/invalidate") {
+                invalidateFcmToken(userService, firebaseTokenService)
+            }
         }
     }
 }
@@ -60,6 +63,55 @@ suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(userService: Use
             WebError.InputInvalid -> {
                 call.respondText("Invalid FCM token", status = HttpStatusCode.BadRequest)
             }
+            DomainError.FirebaseTokenRequired -> {
+                call.respondText("FCM Token cannot be blank", status = HttpStatusCode.BadRequest)
+            }
+
+            is DataError -> {
+                call.respondText(
+                    "An unexpected error occurred",
+                    status = HttpStatusCode.InternalServerError
+                )
+                logger.error(error.throwable)
+            }
+
+            else -> {
+                call.respondText(
+                    "An unexpected error occurred",
+                    status = HttpStatusCode.InternalServerError
+                )
+            }
+        }
+    }
+)
+
+suspend fun PipelineContext<Unit, ApplicationCall>.invalidateFcmToken(userService: UserService, firebaseTokenService: FirebaseTokenService) = binding {
+    call.principal<JWTPrincipal>()
+        .toResultOr { WebError.PrincipalInvalid }
+        .andThen { principal ->
+            userService.getIdFor(principal)
+        }
+        .bind()
+
+    val firebaseToken = runCatching { call.receiveText() }
+        .mapError { WebError.InputInvalid }
+        .bind()
+
+    firebaseTokenService.invalidate(firebaseToken).bind()
+}.mapBoth(
+    success = {
+        call.respondText("Firebase Cloud Messaging token invalidated", status = HttpStatusCode.OK)
+    },
+    failure = { error ->
+        when (error) {
+            WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
+                call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
+            }
+
+            WebError.InputInvalid -> {
+                call.respondText("Invalid FCM token", status = HttpStatusCode.BadRequest)
+            }
+
             DomainError.FirebaseTokenRequired -> {
                 call.respondText("FCM Token cannot be blank", status = HttpStatusCode.BadRequest)
             }

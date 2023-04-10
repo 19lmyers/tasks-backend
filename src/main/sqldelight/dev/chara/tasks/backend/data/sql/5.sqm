@@ -1,6 +1,0 @@
-ALTER TABLE User
-ADD COLUMN display_name TEXT NOT NULL,
-ADD COLUMN profile_photo_uri TEXT;
-
-UPDATE DbMeta
-SET db_version = 6;

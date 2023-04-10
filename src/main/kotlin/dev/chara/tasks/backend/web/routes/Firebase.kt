@@ -7,6 +7,8 @@ import dev.chara.tasks.backend.domain.DomainError
 import dev.chara.tasks.backend.domain.service.FirebaseTokenService
 import dev.chara.tasks.backend.domain.service.UserService
 import dev.chara.tasks.backend.web.WebError
+import dev.chara.tasks.backend.web.logError
+import dev.chara.tasks.backend.web.logTrace
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -14,12 +16,8 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.logging.*
 import io.ktor.util.pipeline.*
 import org.koin.ktor.ext.inject
-import org.slf4j.LoggerFactory
-
-private val logger: Logger = LoggerFactory.getLogger("FirebaseKt")
 
 fun Route.fcm() {
     val userService: UserService by inject()
@@ -28,16 +26,21 @@ fun Route.fcm() {
     route("/fcm") {
         authenticate {
             post("/link") {
+                logTrace("Linking FCM token")
                 linkFcmToken(userService, firebaseTokenService)
             }
             post("/invalidate") {
+                logTrace("Invalidating FCM token")
                 invalidateFcmToken(userService, firebaseTokenService)
             }
         }
     }
 }
 
-suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(userService: UserService, firebaseTokenService: FirebaseTokenService) = binding {
+suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(
+    userService: UserService,
+    firebaseTokenService: FirebaseTokenService
+) = binding {
     val userId = call.principal<JWTPrincipal>()
         .toResultOr { WebError.PrincipalInvalid }
         .andThen { principal ->
@@ -55,6 +58,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(userService: Use
         call.respondText("Firebase Cloud Messaging token linked", status = HttpStatusCode.OK)
     },
     failure = { error ->
+        logError(error)
+
         when (error) {
             WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
                 call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
@@ -63,6 +68,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(userService: Use
             WebError.InputInvalid -> {
                 call.respondText("Invalid FCM token", status = HttpStatusCode.BadRequest)
             }
+
             DomainError.FirebaseTokenRequired -> {
                 call.respondText("FCM Token cannot be blank", status = HttpStatusCode.BadRequest)
             }
@@ -72,7 +78,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(userService: Use
                     "An unexpected error occurred",
                     status = HttpStatusCode.InternalServerError
                 )
-                logger.error(error.throwable)
+                logError(error.throwable)
             }
 
             else -> {
@@ -85,7 +91,10 @@ suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(userService: Use
     }
 )
 
-suspend fun PipelineContext<Unit, ApplicationCall>.invalidateFcmToken(userService: UserService, firebaseTokenService: FirebaseTokenService) = binding {
+suspend fun PipelineContext<Unit, ApplicationCall>.invalidateFcmToken(
+    userService: UserService,
+    firebaseTokenService: FirebaseTokenService
+) = binding {
     call.principal<JWTPrincipal>()
         .toResultOr { WebError.PrincipalInvalid }
         .andThen { principal ->
@@ -103,6 +112,8 @@ suspend fun PipelineContext<Unit, ApplicationCall>.invalidateFcmToken(userServic
         call.respondText("Firebase Cloud Messaging token invalidated", status = HttpStatusCode.OK)
     },
     failure = { error ->
+        logError(error)
+
         when (error) {
             WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
                 call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
@@ -121,7 +132,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.invalidateFcmToken(userServic
                     "An unexpected error occurred",
                     status = HttpStatusCode.InternalServerError
                 )
-                logger.error(error.throwable)
+                logError(error.throwable)
             }
 
             else -> {

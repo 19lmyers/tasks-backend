@@ -53,17 +53,17 @@ class TaskListRepository(databaseFactory: DatabaseFactory) {
 
     fun update(userId: String, listId: String, taskList: TaskList) = runCatching {
         database.taskListQueries.update(
-            taskList.title,
-            taskList.color,
-            taskList.icon,
-            taskList.description,
-            taskList.isPinned,
-            taskList.sortType,
-            taskList.sortDirection,
-            taskList.showIndexNumbers,
-            taskList.lastModified,
-            listId,
-            userId
+            title = taskList.title,
+            color = taskList.color,
+            icon = taskList.icon,
+            description = taskList.description,
+            is_pinned = taskList.isPinned,
+            sort_type = taskList.sortType,
+            sort_direction = taskList.sortDirection,
+            show_index_numbers = taskList.showIndexNumbers,
+            last_modified = taskList.lastModified,
+            id = listId,
+            user_id = userId
         )
     }.mapError { DataError.DatabaseError(it) }
 

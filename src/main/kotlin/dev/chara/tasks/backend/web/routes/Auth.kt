@@ -6,6 +6,7 @@ import dev.chara.tasks.backend.data.DataError
 import dev.chara.tasks.backend.domain.DomainError
 import dev.chara.tasks.backend.domain.service.UserService
 import dev.chara.tasks.backend.web.WebError
+import dev.chara.tasks.backend.web.logTrace
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -19,19 +20,22 @@ import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
-private val logger: Logger = LoggerFactory.getLogger("AuthKt")
+private val logger: Logger = LoggerFactory.getLogger("Auth")
 
 fun Route.auth() {
     val userService: UserService by inject()
 
     route("/auth") {
         post("/register") {
+            logTrace("Requesting new user")
             register(userService)
         }
         post("/login") {
+            logTrace("Requesting auth token")
             login(userService)
         }
         post("/refresh") {
+            logTrace("Requesting auth refresh")
             refresh(userService)
         }
 
@@ -39,14 +43,17 @@ fun Route.auth() {
             // TODO change email endpoint(s)
 
             post("/password") {
+                logTrace("Requesting password change")
                 changePassword(userService)
             }
         }
 
         post("/forgot") {
+            logTrace("Requesting password reset link")
             forgotPassword(userService)
         }
         post("/reset") {
+            logTrace("Requesting password reset")
             resetPassword(userService)
         }
     }

@@ -20,8 +20,7 @@ private val instantAdapter = object : ColumnAdapter<Instant, LocalDateTime> {
     override fun encode(value: Instant): LocalDateTime =
         value.toLocalDateTime(TimeZone.UTC)
             .toJavaLocalDateTime()
-            .truncatedTo(ChronoUnit.SECONDS)
-
+            .truncatedTo(ChronoUnit.MICROS)
 }
 
 class DatabaseFactory(dotenv: Dotenv) {

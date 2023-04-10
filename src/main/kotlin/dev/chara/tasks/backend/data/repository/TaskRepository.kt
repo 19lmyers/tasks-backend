@@ -48,13 +48,13 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
                 id,
                 userId,
                 listId,
-                task.label,
-                task.isCompleted,
-                task.isStarred,
-                task.details,
-                task.reminderDate,
-                task.dueDate,
-                task.lastModified,
+                label = task.label,
+                is_completed = task.isCompleted,
+                is_starred = task.isStarred,
+                details = task.details,
+                reminder_date = task.reminderDate,
+                due_date = task.dueDate,
+                last_modified = task.lastModified,
                 reminder_fired = null,
                 date_created = Clock.System.now(),
                 ordinal = maxOrdinal ?: 0
@@ -66,16 +66,16 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
 
     fun update(userId: String, listId: String, taskId: String, task: Task) = runCatching {
         database.taskQueries.update(
-            task.label,
-            task.isCompleted,
-            task.isStarred,
-            task.details,
-            task.reminderDate,
-            task.dueDate,
-            task.lastModified,
-            taskId,
-            userId,
-            listId
+            label = task.label,
+            is_completed = task.isCompleted,
+            is_starred = task.isStarred,
+            details = task.details,
+            reminder_date = task.reminderDate,
+            due_date = task.dueDate,
+            last_modified = task.lastModified,
+            id = taskId,
+            user_id = userId,
+            list_id = listId
         )
     }.mapError { DataError.DatabaseError(it) }
 

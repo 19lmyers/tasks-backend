@@ -233,7 +233,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.deleteTaskByIds(
     taskService.delete(userId, listId, taskId).bind()
 }.mapBoth(
     success = {
-        call.respondText("Task deleted", status = HttpStatusCode.OK)
+        call.respondText("Task deleted", status = HttpStatusCode.Accepted)
     },
     failure = { error ->
         handleError(error)

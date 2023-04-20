@@ -253,8 +253,13 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.forgotPassword(userSe
             },
             failure = { error ->
                 when (error) {
-                    WebError.InputInvalid, DomainError.UserNotFound -> {
+                    WebError.InputInvalid -> {
                         call.respondText("Invalid email", status = HttpStatusCode.BadRequest)
+                    }
+
+                    DomainError.UserNotFound -> {
+                        // Casually lie to the user
+                        call.respondText("Password reset email sent", status = HttpStatusCode.Accepted)
                     }
 
                     is DataError -> {

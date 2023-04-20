@@ -200,7 +200,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.changePassword(userService: U
             .mapError { WebError.InputInvalid }
             .bind()
 
-        userService.updatePassword(userId, passwordChange.currentPassword, passwordChange.newPassword)
+        userService.updatePassword(userId, passwordChange.currentPassword, passwordChange.newPassword).bind()
     }.mapBoth(
         success = {
             call.respondText("Password changed", status = HttpStatusCode.OK)

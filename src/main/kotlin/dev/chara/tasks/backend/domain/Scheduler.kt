@@ -1,7 +1,7 @@
 package dev.chara.tasks.backend.domain
 
-import dev.chara.tasks.backend.v2.scheduler.job.PasswordResetTokenJob
-import dev.chara.tasks.backend.v2.scheduler.job.PushReminderJob
+import dev.chara.tasks.backend.domain.job.PasswordResetTokenJob
+import dev.chara.tasks.backend.domain.job.PushReminderJob
 import org.quartz.JobBuilder
 import org.quartz.Scheduler
 import org.quartz.SimpleScheduleBuilder

@@ -1,4 +1,4 @@
-package dev.chara.tasks.backend.v2.scheduler.job
+package dev.chara.tasks.backend.domain.job
 
 import com.github.michaelbull.result.mapBoth
 import com.github.michaelbull.result.mapError

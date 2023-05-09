@@ -166,7 +166,7 @@ class UserService(
             .toErrorIfNull { DomainError.ResetTokenNotFound }
             .toErrorIf(
                 predicate = { token ->
-                    token.expiry_time > Clock.System.now()
+                    token.expiry_time <= Clock.System.now()
                 },
                 transform = {
                     DomainError.ResetTokenExpired

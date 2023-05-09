@@ -6,7 +6,7 @@ import dev.chara.tasks.backend.data.DataError
 import dev.chara.tasks.backend.data.DatabaseFactory
 import kotlinx.datetime.Clock
 import java.util.*
-import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 class UserRepository(databaseFactory: DatabaseFactory) {
     private val database = databaseFactory.getDatabase()
@@ -48,7 +48,7 @@ class UserRepository(databaseFactory: DatabaseFactory) {
     }.mapError { DataError.DatabaseError(it) }
 
     fun insertPasswordResetToken(userId: String, resetToken: String) = runCatching {
-        database.passwordResetTokenQueries.insert(resetToken, userId, Clock.System.now().plus(1.hours))
+        database.passwordResetTokenQueries.insert(resetToken, userId, Clock.System.now().plus(20.minutes))
         resetToken
     }.mapError { DataError.DatabaseError(it) }
 

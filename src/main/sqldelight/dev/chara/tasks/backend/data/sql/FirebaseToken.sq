@@ -1,8 +1,7 @@
 getForUser:
 SELECT *
 FROM FirebaseToken
-WHERE user_id = ?
-LIMIT 1;
+WHERE user_id = ?;
 
 update:
 REPLACE INTO FirebaseToken VALUES (?, ?, ?);

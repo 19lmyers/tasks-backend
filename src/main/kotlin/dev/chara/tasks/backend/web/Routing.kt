@@ -40,8 +40,5 @@ fun Route.assets() {
     val dotenv by inject<Dotenv>()
     val assetsFolder = dotenv["TASKS_ASSETS_FOLDER"]
 
-    static("/assets") {
-        staticRootFolder = File(assetsFolder)
-        files(".")
-    }
+    staticFiles("/assets", File(assetsFolder))
 }

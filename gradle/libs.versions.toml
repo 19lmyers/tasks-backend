@@ -54,7 +54,7 @@ ktor-server-test = { module = "io.ktor:ktor-server-test-host", version.ref = "kt
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-network-tls-certificates = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor" }
 
-logback = { module = "ch.qos.logback:logback-classic", version = "1.4.7" }
+logback = { module = "ch.qos.logback:logback-classic", version = "1.4.8" }
 
 mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.1.4" }
 

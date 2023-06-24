@@ -128,7 +128,7 @@ class UserService(
                 mailSender.send(
                     email, displayName, Mail(
                         "Password reset requested",
-                        "To reset your password, please visit the following link on your mobile device: https://tasks.chara.dev/reset?token=$token"
+                        "To reset your password, please visit the following link: https://tasks.chara.dev/reset?token=$token"
                     )
                 )
             }

@@ -17,7 +17,7 @@ data class TaskList(
     val isPinned: Boolean = false,
     val showIndexNumbers: Boolean = false,
 
-    val sortType: SortType = SortType.DATE_CREATED,
+    val sortType: SortType = SortType.ORDINAL,
     val sortDirection: SortDirection = SortDirection.ASCENDING,
 
     val dateCreated: Instant? = null,

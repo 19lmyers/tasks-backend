@@ -35,8 +35,9 @@ fun main() {
 fun Application.module() {
     install(ContentNegotiation) {
         json(Json {
-            this.explicitNulls = false
-            this.ignoreUnknownKeys = true
+            encodeDefaults = true
+            explicitNulls = false
+            ignoreUnknownKeys = true
         })
     }
 

@@ -69,7 +69,7 @@ class DatabaseFactory(dotenv: Dotenv) {
 
     init {
         val currentVersion = getDatabaseVersion()
-        Database.Schema.migrate(databaseDriver, currentVersion, Database.Schema.version)
+        Database.Schema.migrate(databaseDriver, currentVersion.toLong(), Database.Schema.version)
     }
 
     fun getDriver(): SqlDriver {

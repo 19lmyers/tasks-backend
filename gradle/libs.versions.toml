@@ -1,8 +1,8 @@
 [versions]
 
 kotlin = "1.8.22"
-ktor = "2.3.1"
-sqldelight = "2.0.0-rc01"
+ktor = "2.3.2"
+sqldelight = "2.0.0-rc02"
 
 result = "1.1.18"
 validator = "0.6.0"
@@ -26,7 +26,7 @@ bcrypt = { module = "at.favre.lib:bcrypt", version = "0.10.2" }
 
 dotenv = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.4.1" }
 
-firebase-admin = { module = "com.google.firebase:firebase-admin", version = "9.1.1" }
+firebase-admin = { module = "com.google.firebase:firebase-admin", version = "9.2.0" }
 
 hikari-cp = { module = "com.zaxxer:HikariCP", version = "5.0.1" }
 

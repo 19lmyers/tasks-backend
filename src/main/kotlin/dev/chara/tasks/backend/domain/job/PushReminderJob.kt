@@ -71,7 +71,7 @@ class PushReminderJob : CoroutineJob() {
                 }
 
                 for (batch in messages.chunked(500)) {
-                    val batchResponse = FirebaseMessaging.getInstance().sendAll(batch.map { it.second })
+                    val batchResponse = FirebaseMessaging.getInstance().sendEach(batch.map { it.second })
 
                     if (batchResponse.failureCount > 0) {
                         for ((index, response) in batchResponse.responses.withIndex()) {

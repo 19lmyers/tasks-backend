@@ -1,2 +1,2 @@
-FROM mariadb:10.9
+FROM mariadb:latest
 

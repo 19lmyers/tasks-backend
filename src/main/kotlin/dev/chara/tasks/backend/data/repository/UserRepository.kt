@@ -30,7 +30,9 @@ class UserRepository(databaseFactory: DatabaseFactory) {
     }.mapError { DataError.DatabaseError(it) }
 
     fun insert(email: String, displayName: String, hashedPassword: ByteArray) = runCatching {
-        database.userQueries.insert(UUID.randomUUID().toString(), email, hashedPassword, displayName)
+        val id = UUID.randomUUID().toString()
+        database.userQueries.insert(id, email, hashedPassword, displayName)
+        id
     }.mapError { DataError.DatabaseError(it) }
 
     fun update(id: String, displayName: String, profilePhotoUri: String?) = runCatching {

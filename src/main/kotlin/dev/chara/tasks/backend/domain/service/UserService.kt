@@ -52,6 +52,9 @@ class UserService(
 
         val hashedPassword = secretHasher.hash(validPassword)
         repository.insert(validEmail, displayName, hashedPassword)
+            .andThen { id ->
+                requestVerifyEmailResend(id)
+            }
     }
 
     fun authenticate(email: String, password: String) =

@@ -7,8 +7,9 @@ import dev.chara.tasks.backend.data.sql.User as DbUser
 data class Profile(
     val id: String,
     val email: String,
+    val emailVerified: Boolean,
     val displayName: String,
     val profilePhotoUri: String?
 )
 
-fun DbUser.toProfile() = Profile(id, email, display_name, profile_photo_uri)
+fun DbUser.toProfile() = Profile(id, email, email_verified ?: false, display_name, profile_photo_uri)

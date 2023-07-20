@@ -6,10 +6,16 @@ import dev.chara.tasks.backend.data.DataError
 import dev.chara.tasks.backend.data.DatabaseFactory
 import kotlinx.datetime.Clock
 import java.util.*
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 class UserRepository(databaseFactory: DatabaseFactory) {
     private val database = databaseFactory.getDatabase()
+
+    fun getAll() = runCatching {
+        database.userQueries.getAll()
+            .executeAsList()
+    }.mapError { DataError.DatabaseError(it) }
 
     fun getByEmail(email: String) = runCatching {
         database.userQueries
@@ -24,7 +30,7 @@ class UserRepository(databaseFactory: DatabaseFactory) {
     }.mapError { DataError.DatabaseError(it) }
 
     fun insert(email: String, displayName: String, hashedPassword: ByteArray) = runCatching {
-        database.userQueries.insert(UUID.randomUUID().toString(), email, hashedPassword, displayName, null)
+        database.userQueries.insert(UUID.randomUUID().toString(), email, hashedPassword, displayName)
     }.mapError { DataError.DatabaseError(it) }
 
     fun update(id: String, displayName: String, profilePhotoUri: String?) = runCatching {
@@ -35,8 +41,33 @@ class UserRepository(databaseFactory: DatabaseFactory) {
         database.userQueries.updatePhoto(profilePhotoUri, id)
     }.mapError { DataError.DatabaseError(it) }
 
+    fun updateEmail(id: String, email: String) = runCatching {
+        database.userQueries.updateEmail(email, id)
+    }.mapError { DataError.DatabaseError(it) }
+
+    fun setEmailVerified(id: String, emailVerified: Boolean) = runCatching {
+        database.userQueries.setEmailVerified(emailVerified, id)
+    }.mapError { DataError.DatabaseError(it) }
+
     fun updatePassword(userId: String, hashedPassword: ByteArray) = runCatching {
         database.userQueries.updatePassword(hashedPassword, userId)
+    }.mapError { DataError.DatabaseError(it) }
+
+    fun getAllEmailVerificationTokens() = runCatching {
+        database.emailVerificationTokenQueries.getAll().executeAsList()
+    }.mapError { DataError.DatabaseError(it) }
+
+    fun getEmailVerificationToken(verifyToken: String) = runCatching {
+        database.emailVerificationTokenQueries.get(verifyToken).executeAsOneOrNull()
+    }.mapError { DataError.DatabaseError(it) }
+
+    fun insertEmailVerificationToken(userId: String, verifyToken: String, newEmail: String) = runCatching {
+        database.emailVerificationTokenQueries.insert(verifyToken, userId, newEmail, Clock.System.now().plus(1.hours))
+        verifyToken
+    }.mapError { DataError.DatabaseError(it) }
+
+    fun invalidateEmailVerificationToken(verifyToken: String) = runCatching {
+        database.emailVerificationTokenQueries.invalidate(verifyToken)
     }.mapError { DataError.DatabaseError(it) }
 
     fun getAllPasswordResetTokens() = runCatching {

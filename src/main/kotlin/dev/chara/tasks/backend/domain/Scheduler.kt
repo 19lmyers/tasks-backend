@@ -1,7 +1,7 @@
 package dev.chara.tasks.backend.domain
 
-import dev.chara.tasks.backend.domain.job.PasswordResetTokenJob
 import dev.chara.tasks.backend.domain.job.PushReminderJob
+import dev.chara.tasks.backend.domain.job.TokenExpiryJob
 import org.quartz.JobBuilder
 import org.quartz.Scheduler
 import org.quartz.SimpleScheduleBuilder
@@ -27,17 +27,17 @@ fun initScheduler() {
 
     // Password reset token expiry
 
-    val passwordResetTokenJob = JobBuilder.newJob()
-        .ofType(PasswordResetTokenJob::class.java)
-        .withIdentity("PasswordResetTokenJob")
+    val tokenExpiryJob = JobBuilder.newJob()
+        .ofType(TokenExpiryJob::class.java)
+        .withIdentity("TokenExpiryJob")
         .build()
 
-    val passwordResetTokenTrigger = TriggerBuilder.newTrigger()
+    val tokenExpiryTrigger = TriggerBuilder.newTrigger()
         .withSchedule(SimpleScheduleBuilder.repeatHourlyForever())
-        .withIdentity("PasswordResetTokenTrigger")
+        .withIdentity("TokenExpiryTrigger")
         .build()
 
-    scheduler.scheduleJob(passwordResetTokenJob, passwordResetTokenTrigger)
+    scheduler.scheduleJob(tokenExpiryJob, tokenExpiryTrigger)
 
     scheduler.start()
 }

@@ -32,6 +32,8 @@ class MailSender(dotenv: Dotenv) {
         }
 
         email.send()
+
+        Unit
     }.mapError {
         DataError.SMTPError(it)
     }

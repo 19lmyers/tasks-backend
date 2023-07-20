@@ -1,3 +1,7 @@
+getAll:
+SELECT id, email, email_verified, display_name
+FROM User;
+
 getById:
 SELECT *
 FROM User
@@ -11,7 +15,7 @@ WHERE email = ?
 LIMIT 1;
 
 insert:
-INSERT INTO User VALUES (?, ?, ?, ?, ?);
+INSERT INTO User (id, email, hashed_password, display_name) VALUES (?, ?, ?, ?);
 
 update:
 UPDATE User
@@ -21,6 +25,17 @@ WHERE id = ?;
 updatePhoto:
 UPDATE User
 SET profile_photo_uri = ?
+WHERE id = ?;
+
+updateEmail:
+UPDATE User
+SET email = ?,
+email_verified = FALSE
+WHERE id = ?;
+
+setEmailVerified:
+UPDATE User
+SET email_verified = ?
 WHERE id = ?;
 
 updatePassword:

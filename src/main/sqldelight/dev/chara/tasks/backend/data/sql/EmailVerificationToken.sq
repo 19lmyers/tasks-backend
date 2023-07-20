@@ -1,0 +1,16 @@
+getAll:
+SELECT *
+FROM EmailVerificationToken;
+
+get:
+SELECT *
+FROM EmailVerificationToken
+WHERE verify_token = ?
+LIMIT 1;
+
+insert:
+INSERT INTO EmailVerificationToken VALUES (?, ?, ?, ?);
+
+invalidate:
+DELETE FROM EmailVerificationToken
+WHERE verify_token = ?;

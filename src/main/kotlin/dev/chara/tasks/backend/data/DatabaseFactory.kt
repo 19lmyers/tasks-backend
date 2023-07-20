@@ -38,6 +38,9 @@ class DatabaseFactory(dotenv: Dotenv) {
 
     private val database = Database(
         databaseDriver,
+        EmailVerificationToken.Adapter(
+            expiry_timeAdapter = instantAdapter
+        ),
         FirebaseToken.Adapter(
             timestampAdapter = instantAdapter
         ),

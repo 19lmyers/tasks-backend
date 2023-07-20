@@ -3,24 +3,35 @@ package dev.chara.tasks.backend.domain
 import dev.chara.tasks.backend.ApplicationError
 
 sealed class DomainError : ApplicationError {
-    object EmailInvalid : DomainError()
+    data object EmailInvalid : DomainError()
 
-    class PasswordInvalid(val details: String) : DomainError()
-    object PasswordIncorrect : DomainError()
+    data object EmailIncorrect : DomainError()
 
-    object UserNotFound : DomainError()
-    class UserExists(val email: String) : DomainError()
+    data class PasswordInvalid(val details: String) : DomainError()
+    data object PasswordIncorrect : DomainError()
 
-    object AccessTokenInvalid : DomainError()
-    object RefreshTokenInvalid : DomainError()
+    data object UserNotFound : DomainError()
+    data class UserExists(val email: String) : DomainError()
 
-    object ResetTokenNotFound : DomainError()
-    object ResetTokenExpired : DomainError()
+    data object AccessTokenInvalid : DomainError()
+    data object RefreshTokenInvalid : DomainError()
 
-    object ListTitleRequired : DomainError()
-    object ListNotFound : DomainError()
+    data object EmailUnverified : DomainError()
 
-    object TaskNotFound : DomainError()
+    data object EmailVerified : DomainError()
 
-    object FirebaseTokenRequired : DomainError()
+    data object VerifyTokenNotFound : DomainError()
+    data object VerifyTokenExpired : DomainError()
+
+    data object ResetTokenNotFound : DomainError()
+    data object ResetTokenExpired : DomainError()
+
+    data object ListTitleRequired : DomainError()
+    data object ListNotFound : DomainError()
+
+    data object TaskNotFound : DomainError()
+
+    data object FirebaseTokenRequired : DomainError()
+
+    data object RateLimitExceeded : DomainError()
 }

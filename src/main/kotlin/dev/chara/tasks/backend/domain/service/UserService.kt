@@ -97,11 +97,6 @@ class UserService(
         }
     }
 
-    fun getById(id: String) = repository.getById(id)
-        .toErrorIfNull {
-            DomainError.UserNotFound
-        }.map { it.toModel() }
-
     fun getByEmail(email: String) = repository.getByEmail(email)
         .toErrorIfNull {
             DomainError.UserNotFound
@@ -121,6 +116,105 @@ class UserService(
             .andThen { uri ->
                 repository.updatePhoto(id, uri)
             }
+
+    fun requestEmailChange(id: String, newEmail: String) = binding {
+        val validatedNewEmail = emailValidator.validate(newEmail).toResult()
+            .mapError {
+                DomainError.EmailInvalid
+            }
+            .bind()
+
+        val user = repository.getById(id)
+            .toErrorIfNull { DomainError.UserNotFound }
+            .toErrorIf(
+                predicate = { user -> user.email_verified == false },
+                transform = { DomainError.EmailUnverified }
+            )
+            .bind()
+
+        repository.getAll()
+            .toErrorIf(
+                predicate = { users ->
+                    users.any { user -> user.email == validatedNewEmail }
+                },
+                transform = {
+                    DomainError.UserExists(newEmail)
+                }
+            ).bind()
+
+        repository.insertEmailVerificationToken(id, randomTokenGenerator.generateSecureToken(), validatedNewEmail)
+            .andThen { token ->
+                mailSender.send(
+                    validatedNewEmail, user.display_name, Mail(
+                        "Verify your email address",
+                        "To finish changing your email address, please visit the following link: https://tasks.chara.dev/verify?token=$token"
+                    )
+                )
+            }.bind()
+    }
+
+    fun requestVerifyEmailResend(id: String) = binding {
+        val user = repository.getById(id)
+            .toErrorIfNull { DomainError.UserNotFound }
+            .toErrorIf(
+                predicate = { user ->
+                    user.email_verified == true
+                },
+                transform = {
+                    DomainError.EmailVerified
+                }
+            )
+            .bind()
+
+        repository.getAllEmailVerificationTokens()
+            .toErrorIf(
+                predicate = { tokens ->
+                    tokens.any { token -> token.user_id == user.id && token.expiry_time > Clock.System.now() }
+                },
+                transform = {
+                    DomainError.RateLimitExceeded
+                }
+            ).bind()
+
+        repository.insertEmailVerificationToken(id, randomTokenGenerator.generateSecureToken(), user.email)
+            .andThen { token ->
+                mailSender.send(
+                    user.email, user.display_name, Mail(
+                        "Verify your email address",
+                        "To finish registration, please visit the following link: https://tasks.chara.dev/verify?token=$token"
+                    )
+                )
+            }.bind()
+    }
+
+    fun verifyEmail(verifyToken: String, email: String) = binding {
+        val token = repository.getEmailVerificationToken(verifyToken)
+            .toErrorIfNull { DomainError.VerifyTokenNotFound }
+            .toErrorIf(
+                predicate = { token ->
+                    token.expiry_time <= Clock.System.now()
+                },
+                transform = {
+                    DomainError.VerifyTokenExpired
+                }
+            ).bind()
+
+        val user = repository.getById(token.user_id)
+            .toErrorIfNull { DomainError.UserNotFound }
+            .bind()
+
+        if (email == token.new_email) {
+            Ok(Unit)
+        } else {
+            Err(DomainError.EmailIncorrect)
+        }.andThen {
+            repository.updateEmail(user.id, token.new_email)
+        }.andThen {
+            repository.setEmailVerified(user.id, true)
+        }.andThen {
+            repository.invalidateEmailVerificationToken(verifyToken)
+        }.bind()
+    }
 
     fun requestPasswordResetToken(id: String, email: String, displayName: String) =
         repository.insertPasswordResetToken(id, randomTokenGenerator.generateSecureToken())
@@ -147,7 +241,10 @@ class UserService(
             .andThen { repository.getById(userId) }
             .toErrorIfNull {
                 DomainError.UserNotFound
-            }.andThen { user ->
+            }.toErrorIf(
+                predicate = { user -> user.email_verified == false },
+                transform = { DomainError.EmailUnverified }
+            ).andThen { user ->
                 if (secretHasher.verify(currentPassword, user.hashed_password)) {
                     Ok(Unit)
                 } else {

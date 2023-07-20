@@ -3,8 +3,8 @@ package dev.chara.tasks.backend.web
 import dev.chara.tasks.backend.ApplicationError
 
 sealed class WebError : ApplicationError {
-    object InputInvalid : WebError()
-    object PrincipalInvalid : WebError()
+    data object InputInvalid : WebError()
+    data object PrincipalInvalid : WebError()
 
-    class ParameterMissing(val name: String) : WebError()
+    data class ParameterMissing(val name: String) : WebError()
 }

@@ -40,12 +40,25 @@ fun Route.auth() {
         }
 
         authenticate {
-            // TODO change email endpoint(s)
+            post("/email") {
+                logTrace("Requesting email change")
+                changeEmail(userService)
+            }
+
+            post("/email/resend") {
+                logTrace("Requesting verification email resend")
+                resendVerifyEmail(userService)
+            }
 
             post("/password") {
                 logTrace("Requesting password change")
                 changePassword(userService)
             }
+        }
+
+        post("/verify") {
+            logTrace("Requesting email verification")
+            verifyEmail(userService)
         }
 
         post("/forgot") {
@@ -184,63 +197,205 @@ suspend fun PipelineContext<Unit, ApplicationCall>.refresh(userService: UserServ
             }
         )
 
+suspend fun PipelineContext<Unit, ApplicationCall>.changeEmail(userService: UserService) = binding {
+    val profile = call.principal<JWTPrincipal>()
+        .toResultOr { WebError.PrincipalInvalid }
+        .andThen { principal ->
+            userService.getIdFor(principal)
+        }.andThen { id ->
+            userService.getAsProfile(id)
+        }
+        .bind()
+
+    val newEmail = runCatching { call.receiveText() }
+        .mapError { WebError.InputInvalid }
+        .bind()
+
+    userService.requestEmailChange(profile.id, newEmail).bind()
+}.mapBoth(
+    success = {
+        call.respondText("Verification email sent", status = HttpStatusCode.OK)
+    },
+    failure = { error ->
+        when (error) {
+            DomainError.EmailInvalid -> {
+                call.respondText("Improper email", status = HttpStatusCode.BadRequest)
+            }
+
+            DomainError.EmailUnverified -> {
+                call.respondText("Verify your email address first", status = HttpStatusCode.BadRequest)
+            }
+
+            is DomainError.UserExists -> {
+                call.respondText(
+                    "A user with email ${error.email} already exists",
+                    status = HttpStatusCode.Conflict
+                )
+            }
+
+            is DataError -> {
+                call.respondText(
+                    "An unexpected error occurred",
+                    status = HttpStatusCode.InternalServerError
+                )
+                logger.error(error.throwable)
+            }
+
+            else -> {
+                call.respondText(
+                    "An unexpected error occurred",
+                    status = HttpStatusCode.InternalServerError
+                )
+            }
+        }
+    }
+)
+
+suspend fun PipelineContext<Unit, ApplicationCall>.resendVerifyEmail(userService: UserService) =
+    call.principal<JWTPrincipal>()
+        .toResultOr { WebError.PrincipalInvalid }
+        .andThen { principal ->
+            userService.getIdFor(principal)
+        }
+        .andThen { userId -> userService.requestVerifyEmailResend(userId) }
+        .mapBoth(
+            success = {
+                call.respondText("Verification email resent", status = HttpStatusCode.OK)
+            },
+            failure = { error ->
+                when (error) {
+                    DomainError.EmailVerified -> {
+                        call.respondText("Email is already verified", status = HttpStatusCode.BadRequest)
+                    }
+
+                    DomainError.RateLimitExceeded -> {
+                        call.respondText("Rate limit exceeded", status = HttpStatusCode.BadRequest)
+                    }
+
+                    is DataError -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                        logger.error(error.throwable)
+                    }
+
+                    else -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                    }
+                }
+            }
+        )
+
 @Serializable
 data class PasswordChange(val currentPassword: String, val newPassword: String)
 
-suspend fun PipelineContext<Unit, ApplicationCall>.changePassword(userService: UserService) {
-    binding {
-        val userId = call.principal<JWTPrincipal>()
-            .toResultOr { WebError.PrincipalInvalid }
-            .andThen { principal ->
-                userService.getIdFor(principal)
+suspend fun PipelineContext<Unit, ApplicationCall>.changePassword(userService: UserService) = binding {
+    val userId = call.principal<JWTPrincipal>()
+        .toResultOr { WebError.PrincipalInvalid }
+        .andThen { principal ->
+            userService.getIdFor(principal)
+        }
+        .bind()
+
+    val passwordChange = runCatching { call.receive<PasswordChange>() }
+        .mapError { WebError.InputInvalid }
+        .bind()
+
+    userService.updatePassword(userId, passwordChange.currentPassword, passwordChange.newPassword).bind()
+}.mapBoth(
+    success = {
+        call.respondText("Password changed", status = HttpStatusCode.OK)
+    },
+    failure = { error ->
+        when (error) {
+            WebError.InputInvalid -> {
+                call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
             }
-            .bind()
 
-        val passwordChange = runCatching { call.receive<PasswordChange>() }
-            .mapError { WebError.InputInvalid }
-            .bind()
+            WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
+                call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
+            }
 
-        userService.updatePassword(userId, passwordChange.currentPassword, passwordChange.newPassword).bind()
-    }.mapBoth(
-        success = {
-            call.respondText("Password changed", status = HttpStatusCode.OK)
-        },
-        failure = { error ->
-            when (error) {
-                WebError.InputInvalid -> {
-                    call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
-                }
+            DomainError.EmailUnverified -> {
+                call.respondText("Verify your email address first", status = HttpStatusCode.BadRequest)
+            }
 
-                WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
-                    call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
-                }
+            is DomainError.PasswordInvalid -> {
+                call.respondText(error.details, status = HttpStatusCode.BadRequest)
+            }
 
-                is DomainError.PasswordInvalid -> {
-                    call.respondText(error.details, status = HttpStatusCode.BadRequest)
-                }
+            DomainError.PasswordIncorrect -> {
+                call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
+            }
 
-                DomainError.PasswordIncorrect -> {
-                    call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
-                }
+            is DataError -> {
+                call.respondText(
+                    "An unexpected error occurred",
+                    status = HttpStatusCode.InternalServerError
+                )
+                logger.error(error.throwable)
+            }
 
-                is DataError -> {
-                    call.respondText(
-                        "An unexpected error occurred",
-                        status = HttpStatusCode.InternalServerError
-                    )
-                    logger.error(error.throwable)
-                }
-
-                else -> {
-                    call.respondText(
-                        "An unexpected error occurred",
-                        status = HttpStatusCode.InternalServerError
-                    )
-                }
+            else -> {
+                call.respondText(
+                    "An unexpected error occurred",
+                    status = HttpStatusCode.InternalServerError
+                )
             }
         }
-    )
-}
+    }
+)
+
+@Serializable
+data class EmailVerification(val verifyToken: String, val email: String)
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.verifyEmail(userService: UserService) =
+    runCatching { call.receive<EmailVerification>() }
+        .mapError { WebError.InputInvalid }
+        .andThen { verification -> userService.verifyEmail(verification.verifyToken, verification.email) }
+        .mapBoth(
+            success = {
+                call.respondText("Email change successful", status = HttpStatusCode.OK)
+            },
+            failure = { error ->
+                when (error) {
+                    WebError.InputInvalid -> {
+                        call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
+                    }
+
+                    DomainError.EmailIncorrect -> {
+                        call.respondText("Incorrect email", status = HttpStatusCode.Unauthorized)
+                    }
+
+                    DomainError.UserNotFound -> {
+                        call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
+                    }
+
+                    DomainError.VerifyTokenNotFound, DomainError.VerifyTokenExpired -> {
+                        call.respondText("Invalid verification token", status = HttpStatusCode.BadRequest)
+                    }
+
+                    is DataError -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                        logger.error(error.throwable)
+                    }
+
+                    else -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                    }
+                }
+            }
+        )
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.forgotPassword(userService: UserService) =
     runCatching { call.receiveText() }

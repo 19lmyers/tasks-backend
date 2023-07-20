@@ -9,7 +9,7 @@ import org.koin.core.component.inject
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
 
-class PasswordResetTokenJob() : CoroutineJob() {
+class TokenExpiryJob() : CoroutineJob() {
 
     private val logger = LoggerFactory.getLogger("PasswordResetTokenJob")
 
@@ -19,6 +19,21 @@ class PasswordResetTokenJob() : CoroutineJob() {
         if (context == null) {
             return
         }
+
+        repository.getAllEmailVerificationTokens().mapBoth(
+            success = { tokens ->
+                for (verifyToken in tokens) {
+                    if (verifyToken.expiry_time <= Clock.System.now()) {
+                        repository.invalidateEmailVerificationToken(verifyToken.verify_token).mapError {
+                            logger.error(it.throwable)
+                        }
+                    }
+                }
+            },
+            failure = {
+                logger.error(it.throwable)
+            }
+        )
 
         repository.getAllPasswordResetTokens().mapBoth(
             success = { tokens ->

@@ -22,79 +22,86 @@ class PushReminderJob : CoroutineJob() {
             return
         }
 
-        reminderRepository.get().mapBoth(
-            success = { reminders ->
-                val messages = mutableListOf<Pair<String, Message>>();
+        reminderRepository
+            .get()
+            .mapBoth(
+                success = { reminders ->
+                    val messages = mutableListOf<Pair<String, Message>>()
 
-                for (reminder in reminders) {
-                    logger.info("Dispatching reminder for task ${reminder.task_id}")
+                    for (reminder in reminders) {
+                        logger.info("Dispatching reminder for task ${reminder.task_id}")
 
-                    val alert = ApsAlert.builder()
-                        .setTitle(reminder.task_label)
-                        .setBody(reminder.list_title)
-                        .build()
+                        val alert =
+                            ApsAlert.builder()
+                                .setTitle(reminder.task_label)
+                                .setBody(reminder.list_title)
+                                .build()
 
-                    val aps = Aps.builder()
-                        .setAlert(alert)
-                        .setCategory("reminder")
-                        .build()
+                        val aps = Aps.builder().setAlert(alert).setCategory("reminder").build()
 
-                    val apnsConfig = ApnsConfig.builder()
-                        .setAps(aps)
-                        .build()
+                        val apnsConfig = ApnsConfig.builder().setAps(aps).build()
 
-                    firebaseTokenRepository.getForUser(reminder.user_id).mapBoth(
-                        success = { userTokens ->
-                            for (token in userTokens) {
-                                val message = Message.builder()
-                                    .putData(DATA_MESSAGE_TYPE, MESSAGE_TYPE_REMINDER)
-                                    .putData(DATA_TASK_ID, reminder.task_id)
-                                    .putData(DATA_TASK_LABEL, reminder.task_label)
-                                    .putData(DATA_LIST_TITLE, reminder.list_title)
-                                    .putData(DATA_LIST_COLOR, reminder.list_color?.name ?: "")
-                                    .putData(DATA_LIST_ICON, reminder.list_icon?.name ?: "")
-                                    .setApnsConfig(apnsConfig)
-                                    .setToken(token)
-                                    .build()
+                        firebaseTokenRepository
+                            .getForUser(reminder.user_id)
+                            .mapBoth(
+                                success = { userTokens ->
+                                    for (token in userTokens) {
+                                        val message =
+                                            Message.builder()
+                                                .putData(DATA_MESSAGE_TYPE, MESSAGE_TYPE_REMINDER)
+                                                .putData(DATA_TASK_ID, reminder.task_id)
+                                                .putData(DATA_TASK_LABEL, reminder.task_label)
+                                                .putData(DATA_LIST_TITLE, reminder.list_title)
+                                                .putData(
+                                                    DATA_LIST_COLOR,
+                                                    reminder.list_color?.name ?: ""
+                                                )
+                                                .putData(
+                                                    DATA_LIST_ICON,
+                                                    reminder.list_icon?.name ?: ""
+                                                )
+                                                .setApnsConfig(apnsConfig)
+                                                .setToken(token)
+                                                .build()
 
-                                messages.add(token to message)
+                                        messages.add(token to message)
 
-                                reminderRepository.setFired(reminder.user_id, reminder.task_id).mapError {
-                                    logger.error(it.throwable)
-                                }
-                            }
-                        },
-                        failure = {
-                            logger.error(it.throwable)
-                        }
-                    )
-                }
+                                        reminderRepository
+                                            .setFired(reminder.user_id, reminder.task_id)
+                                            .mapError { logger.error(it.throwable) }
+                                    }
+                                },
+                                failure = { logger.error(it.throwable) }
+                            )
+                    }
 
-                for (batch in messages.chunked(500)) {
-                    val batchResponse = FirebaseMessaging.getInstance().sendEach(batch.map { it.second })
+                    for (batch in messages.chunked(500)) {
+                        val batchResponse =
+                            FirebaseMessaging.getInstance().sendEach(batch.map { it.second })
 
-                    if (batchResponse.failureCount > 0) {
-                        for ((index, response) in batchResponse.responses.withIndex()) {
-                            if (!response.isSuccessful) {
-                                val errorCode = response.exception.messagingErrorCode
+                        if (batchResponse.failureCount > 0) {
+                            for ((index, response) in batchResponse.responses.withIndex()) {
+                                if (!response.isSuccessful) {
+                                    val errorCode = response.exception.messagingErrorCode
 
-                                logger.warn("Error code: {}", errorCode)
+                                    logger.warn("Error code: {}", errorCode)
 
-                                if (errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
-                                    val failedToken = batch[index].first
-                                    firebaseTokenRepository.invalidate(failedToken).mapError {
-                                        logger.error(it.throwable)
+                                    if (
+                                        errorCode == MessagingErrorCode.UNREGISTERED ||
+                                            errorCode == MessagingErrorCode.INVALID_ARGUMENT
+                                    ) {
+                                        val failedToken = batch[index].first
+                                        firebaseTokenRepository.invalidate(failedToken).mapError {
+                                            logger.error(it.throwable)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            },
-            failure = {
-                logger.error(it.throwable)
-            }
-        )
+                },
+                failure = { logger.error(it.throwable) }
+            )
     }
 
     companion object {

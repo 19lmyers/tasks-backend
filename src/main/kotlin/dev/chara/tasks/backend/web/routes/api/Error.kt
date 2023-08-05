@@ -14,30 +14,26 @@ suspend fun PipelineContext<Unit, ApplicationCall>.handleError(error: Applicatio
     logError(error)
 
     when (error) {
-        WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
+        WebError.PrincipalInvalid,
+        DomainError.AccessTokenInvalid,
+        DomainError.UserNotFound -> {
             call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
         }
-
         WebError.InputInvalid -> {
             call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
         }
-
         is WebError.ParameterMissing -> {
             call.respondText("Missing parameter ${error.name}", status = HttpStatusCode.BadRequest)
         }
-
         DomainError.ListNotFound -> {
             call.respondText("No task list with ID", status = HttpStatusCode.BadRequest)
         }
-
         DomainError.ListTitleRequired -> {
             call.respondText("Title cannot be blank", status = HttpStatusCode.BadRequest)
         }
-
         DomainError.TaskNotFound -> {
             call.respondText("No task with ID", status = HttpStatusCode.BadRequest)
         }
-
         is DataError -> {
             call.respondText(
                 "An unexpected error occurred",
@@ -45,7 +41,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.handleError(error: Applicatio
             )
             logError(error.throwable)
         }
-
         else -> {
             call.respondText(
                 "An unexpected error occurred",

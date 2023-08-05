@@ -8,7 +8,7 @@ plugins {
 
     alias(libs.plugins.sqldelight)
 
-    alias(libs.plugins.spotless)
+    alias(libs.plugins.ktfmt)
 
     alias(libs.plugins.versions)
 }
@@ -83,11 +83,4 @@ sqldelight {
     }
 }
 
-spotless {
-    // ratchetFrom("origin/main")
-    kotlin {
-        ktfmt().dropboxStyle()
-        licenseHeaderFile("LICENSE")
-    }
-    kotlinGradle { ktfmt().dropboxStyle() }
-}
+ktfmt { kotlinLangStyle() }

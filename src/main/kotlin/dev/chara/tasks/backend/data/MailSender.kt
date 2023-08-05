@@ -16,25 +16,26 @@ class MailSender(dotenv: Dotenv) {
     private val smtpLogin = dotenv["SMTP_LOGIN"]
     private val smtpPassword = dotenv["SMTP_PASSWORD"]
 
-    fun send(recipient: String, name: String, mail: Mail) = runCatching {
-        val email: Email = SimpleEmail().apply {
-            hostName = smtpServer
-            setSmtpPort(smtpServerPort)
-            setAuthentication(smtpLogin, smtpPassword)
-            isSSLOnConnect = true
+    fun send(recipient: String, name: String, mail: Mail) =
+        runCatching {
+                val email: Email =
+                    SimpleEmail().apply {
+                        hostName = smtpServer
+                        setSmtpPort(smtpServerPort)
+                        setAuthentication(smtpLogin, smtpPassword)
+                        isSSLOnConnect = true
 
-            setFrom("noreply@tasks.chara.dev", "Tasks (chara.dev)")
+                        setFrom("noreply@tasks.chara.dev", "Tasks (chara.dev)")
 
-            subject = mail.subject
-            setMsg(mail.body)
+                        subject = mail.subject
+                        setMsg(mail.body)
 
-            addTo(recipient, name)
-        }
+                        addTo(recipient, name)
+                    }
 
-        email.send()
+                email.send()
 
-        Unit
-    }.mapError {
-        DataError.SMTPError(it)
-    }
+                Unit
+            }
+            .mapError { DataError.SMTPError(it) }
 }

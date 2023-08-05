@@ -9,22 +9,24 @@ import io.ktor.http.*
 
 inline fun <V, E> Result<V?, E>.toErrorIfNull(transform: () -> E): Result<V, E> {
     return when (this) {
-        is Ok -> if (value == null) {
-            Err(transform())
-        } else {
-            Ok(value!!)
-        }
+        is Ok ->
+            if (value == null) {
+                Err(transform())
+            } else {
+                Ok(value!!)
+            }
         is Err -> this
     }
 }
 
 inline fun <V, E> Result<V?, E>.toErrorIfNotNull(transform: (V) -> E): Result<Unit, E> {
     return when (this) {
-        is Ok -> if (value != null) {
-            Err(transform(value!!))
-        } else {
-            Ok(Unit)
-        }
+        is Ok ->
+            if (value != null) {
+                Err(transform(value!!))
+            } else {
+                Ok(Unit)
+            }
         is Err -> this
     }
 }
@@ -37,8 +39,9 @@ fun <T> ValidationResult<T>.toResult() =
         Err(invalid.errors.first())
     }
 
-fun Parameters.getAsResult(name: String) = if (contains(name)) {
-    Ok(get(name)!!)
-} else {
-    Err(WebError.ParameterMissing(name))
-}
+fun Parameters.getAsResult(name: String) =
+    if (contains(name)) {
+        Ok(get(name)!!)
+    } else {
+        Err(WebError.ParameterMissing(name))
+    }

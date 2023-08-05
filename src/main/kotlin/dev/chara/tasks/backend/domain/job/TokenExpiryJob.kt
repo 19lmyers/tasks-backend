@@ -20,34 +20,34 @@ class TokenExpiryJob() : CoroutineJob() {
             return
         }
 
-        repository.getAllEmailVerificationTokens().mapBoth(
-            success = { tokens ->
-                for (verifyToken in tokens) {
-                    if (verifyToken.expiry_time <= Clock.System.now()) {
-                        repository.invalidateEmailVerificationToken(verifyToken.verify_token).mapError {
-                            logger.error(it.throwable)
+        repository
+            .getAllEmailVerificationTokens()
+            .mapBoth(
+                success = { tokens ->
+                    for (verifyToken in tokens) {
+                        if (verifyToken.expiry_time <= Clock.System.now()) {
+                            repository
+                                .invalidateEmailVerificationToken(verifyToken.verify_token)
+                                .mapError { logger.error(it.throwable) }
                         }
                     }
-                }
-            },
-            failure = {
-                logger.error(it.throwable)
-            }
-        )
+                },
+                failure = { logger.error(it.throwable) }
+            )
 
-        repository.getAllPasswordResetTokens().mapBoth(
-            success = { tokens ->
-                for (resetToken in tokens) {
-                    if (resetToken.expiry_time <= Clock.System.now()) {
-                        repository.invalidatePasswordResetToken(resetToken.reset_token).mapError {
-                            logger.error(it.throwable)
+        repository
+            .getAllPasswordResetTokens()
+            .mapBoth(
+                success = { tokens ->
+                    for (resetToken in tokens) {
+                        if (resetToken.expiry_time <= Clock.System.now()) {
+                            repository
+                                .invalidatePasswordResetToken(resetToken.reset_token)
+                                .mapError { logger.error(it.throwable) }
                         }
                     }
-                }
-            },
-            failure = {
-                logger.error(it.throwable)
-            }
-        )
+                },
+                failure = { logger.error(it.throwable) }
+            )
     }
 }

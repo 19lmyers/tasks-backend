@@ -7,12 +7,10 @@ class RandomTokenGenerator {
     private val charset = ('a'..'z') + ('A'..'Z') + ('0'..'9')
     private val secureRandom = SecureRandom().asKotlinRandom()
 
-    fun generateSecureToken(): String = (1..TOKEN_LENGTH)
-        .map { charset.random(secureRandom) }
-        .joinToString("")
+    fun generateSecureToken(): String =
+        (1..TOKEN_LENGTH).map { charset.random(secureRandom) }.joinToString("")
 
     companion object {
         private const val TOKEN_LENGTH = 36
-
     }
 }

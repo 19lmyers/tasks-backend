@@ -9,16 +9,16 @@ import dev.chara.tasks.backend.util.toErrorIfNull
 
 class TaskListService(private val repository: TaskListRepository) {
 
-    fun getIdFor(userId: String, listId: String) = repository.getByIds(userId, listId)
-        .toErrorIfNull {
-            DomainError.ListNotFound
-        }.map { it.id!! }
+    fun getIdFor(userId: String, listId: String) =
+        repository
+            .getByIds(userId, listId)
+            .toErrorIfNull { DomainError.ListNotFound }
+            .map { it.id!! }
 
     fun getForUser(userId: String) = repository.getByUser(userId)
 
-    fun getByIds(userId: String, listId: String) = repository.getByIds(userId, listId).toErrorIfNull {
-        DomainError.ListNotFound
-    }
+    fun getByIds(userId: String, listId: String) =
+        repository.getByIds(userId, listId).toErrorIfNull { DomainError.ListNotFound }
 
     fun insert(userId: String, taskList: TaskList) =
         if (taskList.title.isBlank()) {

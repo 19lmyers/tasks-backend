@@ -11,8 +11,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.koin.ktor.ext.inject
 import java.io.File
+import org.koin.ktor.ext.inject
 
 fun Routing.main() {
     status()
@@ -23,9 +23,7 @@ fun Routing.main() {
 }
 
 fun Route.status() {
-    get {
-        call.respondText("[v3] Hello, world!")
-    }
+    get { call.respondText("[v3] Hello, world!") }
 }
 
 fun Route.api() {

@@ -9,17 +9,16 @@ import kotlinx.datetime.Instant
 
 class TaskService(private val repository: TaskRepository) {
 
-    fun getIdFor(userId: String, listId: String, taskId: String) = repository.getByIds(userId, listId, taskId)
-        .toErrorIfNull {
-            DomainError.TaskNotFound
-        }.map { it.id!! }
+    fun getIdFor(userId: String, listId: String, taskId: String) =
+        repository
+            .getByIds(userId, listId, taskId)
+            .toErrorIfNull { DomainError.TaskNotFound }
+            .map { it.id!! }
 
     fun getTasksByList(userId: String, listId: String) = repository.getByList(userId, listId)
 
     fun getTaskByIds(userId: String, listId: String, taskId: String) =
-        repository.getByIds(userId, listId, taskId).toErrorIfNull {
-            DomainError.TaskNotFound
-        }
+        repository.getByIds(userId, listId, taskId).toErrorIfNull { DomainError.TaskNotFound }
 
     fun insert(userId: String, listId: String, task: Task) = repository.insert(userId, listId, task)
 
@@ -29,10 +28,17 @@ class TaskService(private val repository: TaskRepository) {
     fun move(userId: String, newListId: String, taskId: String, lastModified: Instant) =
         repository.move(userId, newListId, taskId, lastModified)
 
-    fun reorder(userId: String, listId: String, taskId: String, fromIndex: Int, toIndex: Int, lastModified: Instant) =
-        repository.reorder(userId, listId, taskId, fromIndex, toIndex, lastModified)
+    fun reorder(
+        userId: String,
+        listId: String,
+        taskId: String,
+        fromIndex: Int,
+        toIndex: Int,
+        lastModified: Instant
+    ) = repository.reorder(userId, listId, taskId, fromIndex, toIndex, lastModified)
 
-    fun delete(userId: String, listId: String, taskId: String) = repository.delete(userId, listId, taskId)
+    fun delete(userId: String, listId: String, taskId: String) =
+        repository.delete(userId, listId, taskId)
 
     fun clearCompletedTasksByList(userId: String, listId: String) =
         repository.clearCompletedTasksByList(userId, listId)

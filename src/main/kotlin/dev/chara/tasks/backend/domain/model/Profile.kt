@@ -1,7 +1,7 @@
 package dev.chara.tasks.backend.domain.model
 
-import kotlinx.serialization.Serializable
 import dev.chara.tasks.backend.data.sql.User as DbUser
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class Profile(
@@ -12,4 +12,5 @@ data class Profile(
     val profilePhotoUri: String?
 )
 
-fun DbUser.toProfile() = Profile(id, email, email_verified ?: false, display_name, profile_photo_uri)
+fun DbUser.toProfile() =
+    Profile(id, email, email_verified ?: false, display_name, profile_photo_uri)

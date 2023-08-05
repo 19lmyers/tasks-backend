@@ -40,107 +40,116 @@ fun Route.fcm() {
 suspend fun PipelineContext<Unit, ApplicationCall>.linkFcmToken(
     userService: UserService,
     firebaseTokenService: FirebaseTokenService
-) = binding {
-    val userId = call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
+) =
+    binding {
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
+
+            val firebaseToken =
+                runCatching { call.receiveText() }.mapError { WebError.InputInvalid }.bind()
+
+            firebaseTokenService.link(userId, firebaseToken).bind()
         }
-        .bind()
-
-    val firebaseToken = runCatching { call.receiveText() }
-        .mapError { WebError.InputInvalid }
-        .bind()
-
-    firebaseTokenService.link(userId, firebaseToken).bind()
-}.mapBoth(
-    success = {
-        call.respondText("Firebase Cloud Messaging token linked", status = HttpStatusCode.OK)
-    },
-    failure = { error ->
-        logError(error)
-
-        when (error) {
-            WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
-                call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
-            }
-
-            WebError.InputInvalid -> {
-                call.respondText("Invalid FCM token", status = HttpStatusCode.BadRequest)
-            }
-
-            DomainError.FirebaseTokenRequired -> {
-                call.respondText("FCM Token cannot be blank", status = HttpStatusCode.BadRequest)
-            }
-
-            is DataError -> {
+        .mapBoth(
+            success = {
                 call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
+                    "Firebase Cloud Messaging token linked",
+                    status = HttpStatusCode.OK
                 )
-                logError(error.throwable)
-            }
+            },
+            failure = { error ->
+                logError(error)
 
-            else -> {
-                call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
-                )
+                when (error) {
+                    WebError.PrincipalInvalid,
+                    DomainError.AccessTokenInvalid,
+                    DomainError.UserNotFound -> {
+                        call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
+                    }
+                    WebError.InputInvalid -> {
+                        call.respondText("Invalid FCM token", status = HttpStatusCode.BadRequest)
+                    }
+                    DomainError.FirebaseTokenRequired -> {
+                        call.respondText(
+                            "FCM Token cannot be blank",
+                            status = HttpStatusCode.BadRequest
+                        )
+                    }
+                    is DataError -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                        logError(error.throwable)
+                    }
+                    else -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                    }
+                }
             }
-        }
-    }
-)
+        )
 
 suspend fun PipelineContext<Unit, ApplicationCall>.invalidateFcmToken(
     userService: UserService,
     firebaseTokenService: FirebaseTokenService
-) = binding {
-    call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
+) =
+    binding {
+            call
+                .principal<JWTPrincipal>()
+                .toResultOr { WebError.PrincipalInvalid }
+                .andThen { principal -> userService.getIdFor(principal) }
+                .bind()
+
+            val firebaseToken =
+                runCatching { call.receiveText() }.mapError { WebError.InputInvalid }.bind()
+
+            firebaseTokenService.invalidate(firebaseToken).bind()
         }
-        .bind()
-
-    val firebaseToken = runCatching { call.receiveText() }
-        .mapError { WebError.InputInvalid }
-        .bind()
-
-    firebaseTokenService.invalidate(firebaseToken).bind()
-}.mapBoth(
-    success = {
-        call.respondText("Firebase Cloud Messaging token invalidated", status = HttpStatusCode.OK)
-    },
-    failure = { error ->
-        logError(error)
-
-        when (error) {
-            WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
-                call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
-            }
-
-            WebError.InputInvalid -> {
-                call.respondText("Invalid FCM token", status = HttpStatusCode.BadRequest)
-            }
-
-            DomainError.FirebaseTokenRequired -> {
-                call.respondText("FCM Token cannot be blank", status = HttpStatusCode.BadRequest)
-            }
-
-            is DataError -> {
+        .mapBoth(
+            success = {
                 call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
+                    "Firebase Cloud Messaging token invalidated",
+                    status = HttpStatusCode.OK
                 )
-                logError(error.throwable)
-            }
+            },
+            failure = { error ->
+                logError(error)
 
-            else -> {
-                call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
-                )
+                when (error) {
+                    WebError.PrincipalInvalid,
+                    DomainError.AccessTokenInvalid,
+                    DomainError.UserNotFound -> {
+                        call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
+                    }
+                    WebError.InputInvalid -> {
+                        call.respondText("Invalid FCM token", status = HttpStatusCode.BadRequest)
+                    }
+                    DomainError.FirebaseTokenRequired -> {
+                        call.respondText(
+                            "FCM Token cannot be blank",
+                            status = HttpStatusCode.BadRequest
+                        )
+                    }
+                    is DataError -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                        logError(error.throwable)
+                    }
+                    else -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                    }
+                }
             }
-        }
-    }
-)
+        )

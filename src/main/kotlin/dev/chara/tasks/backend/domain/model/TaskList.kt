@@ -1,24 +1,19 @@
 package dev.chara.tasks.backend.domain.model
 
+import dev.chara.tasks.backend.data.sql.TaskList as DbTaskList
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import dev.chara.tasks.backend.data.sql.TaskList as DbTaskList
 
 @Serializable
 data class TaskList(
     val id: String?,
-
     val title: String,
-
     val color: Color? = null,
     val icon: Icon? = null,
     val description: String? = null,
-
     val showIndexNumbers: Boolean = false,
-
     val sortType: SortType = SortType.ORDINAL,
     val sortDirection: SortDirection = SortDirection.ASCENDING,
-
     val dateCreated: Instant? = null,
     val lastModified: Instant
 ) {
@@ -70,7 +65,7 @@ data class TaskList(
         LABEL,
         DATE_CREATED,
         UPCOMING,
-        STARRED;
+        STARRED
     }
 
     @Serializable
@@ -80,15 +75,16 @@ data class TaskList(
     }
 }
 
-fun DbTaskList.toModel() = TaskList(
-    id,
-    title,
-    color,
-    icon,
-    description,
-    show_index_numbers,
-    sort_type,
-    sort_direction,
-    date_created,
-    last_modified
-)
+fun DbTaskList.toModel() =
+    TaskList(
+        id,
+        title,
+        color,
+        icon,
+        description,
+        show_index_numbers,
+        sort_type,
+        sort_direction,
+        date_created,
+        last_modified
+    )

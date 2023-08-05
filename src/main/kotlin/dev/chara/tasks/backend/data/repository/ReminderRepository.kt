@@ -9,13 +9,11 @@ class ReminderRepository(databaseFactory: DatabaseFactory) {
 
     private val database = databaseFactory.getDatabase()
 
-    fun get() = runCatching {
-        database.reminderQueries
-            .get()
-            .executeAsList()
-    }.mapError { DataError.DatabaseError(it) }
+    fun get() =
+        runCatching { database.reminderQueries.get().executeAsList() }
+            .mapError { DataError.DatabaseError(it) }
 
-    fun setFired(userId: String, taskId: String) = runCatching {
-        database.reminderQueries.setFired(userId, taskId)
-    }.mapError { DataError.DatabaseError(it) }
+    fun setFired(userId: String, taskId: String) =
+        runCatching { database.reminderQueries.setFired(userId, taskId) }
+            .mapError { DataError.DatabaseError(it) }
 }

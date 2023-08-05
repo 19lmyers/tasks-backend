@@ -78,32 +78,28 @@ data class RegisterCredentials(val email: String, val displayName: String, val p
 suspend fun PipelineContext<Unit, ApplicationCall>.register(userService: UserService) =
     runCatching { call.receive<RegisterCredentials>() }
         .mapError { WebError.InputInvalid }
-        .andThen { credentials -> userService.create(credentials.email, credentials.displayName, credentials.password) }
+        .andThen { credentials ->
+            userService.create(credentials.email, credentials.displayName, credentials.password)
+        }
         .mapBoth(
-            success = {
-                call.respondText("User created", status = HttpStatusCode.Created)
-            },
+            success = { call.respondText("User created", status = HttpStatusCode.Created) },
             failure = { error ->
                 when (error) {
                     WebError.InputInvalid -> {
                         call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
                     }
-
                     DomainError.EmailInvalid -> {
                         call.respondText("Improper email", status = HttpStatusCode.BadRequest)
                     }
-
                     is DomainError.PasswordInvalid -> {
                         call.respondText(error.details, status = HttpStatusCode.BadRequest)
                     }
-
                     is DomainError.UserExists -> {
                         call.respondText(
                             "A user with email ${error.email} already exists",
                             status = HttpStatusCode.Conflict
                         )
                     }
-
                     is DataError -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -111,7 +107,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.register(userService: UserSer
                         )
                         logger.error(error.throwable)
                     }
-
                     else -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -122,31 +117,31 @@ suspend fun PipelineContext<Unit, ApplicationCall>.register(userService: UserSer
             }
         )
 
-@Serializable
-data class LoginCredentials(val email: String, val password: String)
+@Serializable data class LoginCredentials(val email: String, val password: String)
 
 suspend fun PipelineContext<Unit, ApplicationCall>.login(userService: UserService) =
     runCatching { call.receive<LoginCredentials>() }
         .mapError { WebError.InputInvalid }
-        .andThen { credentials -> userService.authenticate(credentials.email, credentials.password) }
+        .andThen { credentials ->
+            userService.authenticate(credentials.email, credentials.password)
+        }
         .mapBoth(
-            success = { tokenPair ->
-                call.respond(tokenPair)
-            },
+            success = { tokenPair -> call.respond(tokenPair) },
             failure = { error ->
                 when (error) {
                     WebError.InputInvalid -> {
                         call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
                     }
-
                     DomainError.EmailInvalid -> {
                         call.respondText("Improper email", status = HttpStatusCode.BadRequest)
                     }
-
-                    DomainError.UserNotFound, DomainError.PasswordIncorrect -> {
-                        call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
+                    DomainError.UserNotFound,
+                    DomainError.PasswordIncorrect -> {
+                        call.respondText(
+                            "Invalid credentials",
+                            status = HttpStatusCode.Unauthorized
+                        )
                     }
-
                     is DataError -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -154,7 +149,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.login(userService: UserServic
                         )
                         logger.error(error.throwable)
                     }
-
                     else -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -170,15 +164,17 @@ suspend fun PipelineContext<Unit, ApplicationCall>.refresh(userService: UserServ
         .mapError { WebError.InputInvalid }
         .andThen { token -> userService.refresh(token) }
         .mapBoth(
-            success = { tokenPair ->
-                call.respond(tokenPair)
-            },
+            success = { tokenPair -> call.respond(tokenPair) },
             failure = { error ->
                 when (error) {
-                    WebError.InputInvalid, DomainError.RefreshTokenInvalid, DomainError.UserNotFound -> {
-                        call.respondText("Invalid refresh token", status = HttpStatusCode.BadRequest)
+                    WebError.InputInvalid,
+                    DomainError.RefreshTokenInvalid,
+                    DomainError.UserNotFound -> {
+                        call.respondText(
+                            "Invalid refresh token",
+                            status = HttpStatusCode.BadRequest
+                        )
                     }
-
                     is DataError -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -186,7 +182,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.refresh(userService: UserServ
                         )
                         logger.error(error.throwable)
                     }
-
                     else -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -197,81 +192,76 @@ suspend fun PipelineContext<Unit, ApplicationCall>.refresh(userService: UserServ
             }
         )
 
-suspend fun PipelineContext<Unit, ApplicationCall>.changeEmail(userService: UserService) = binding {
-    val profile = call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
-        }.andThen { id ->
-            userService.getAsProfile(id)
+suspend fun PipelineContext<Unit, ApplicationCall>.changeEmail(userService: UserService) =
+    binding {
+            val profile =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .andThen { id -> userService.getAsProfile(id) }
+                    .bind()
+
+            val newEmail =
+                runCatching { call.receiveText() }.mapError { WebError.InputInvalid }.bind()
+
+            userService.requestEmailChange(profile.id, newEmail).bind()
         }
-        .bind()
-
-    val newEmail = runCatching { call.receiveText() }
-        .mapError { WebError.InputInvalid }
-        .bind()
-
-    userService.requestEmailChange(profile.id, newEmail).bind()
-}.mapBoth(
-    success = {
-        call.respondText("Verification email sent", status = HttpStatusCode.OK)
-    },
-    failure = { error ->
-        when (error) {
-            DomainError.EmailInvalid -> {
-                call.respondText("Improper email", status = HttpStatusCode.BadRequest)
+        .mapBoth(
+            success = { call.respondText("Verification email sent", status = HttpStatusCode.OK) },
+            failure = { error ->
+                when (error) {
+                    DomainError.EmailInvalid -> {
+                        call.respondText("Improper email", status = HttpStatusCode.BadRequest)
+                    }
+                    DomainError.EmailUnverified -> {
+                        call.respondText(
+                            "Verify your email address first",
+                            status = HttpStatusCode.BadRequest
+                        )
+                    }
+                    is DomainError.UserExists -> {
+                        call.respondText(
+                            "A user with email ${error.email} already exists",
+                            status = HttpStatusCode.Conflict
+                        )
+                    }
+                    is DataError -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                        logger.error(error.throwable)
+                    }
+                    else -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                    }
+                }
             }
-
-            DomainError.EmailUnverified -> {
-                call.respondText("Verify your email address first", status = HttpStatusCode.BadRequest)
-            }
-
-            is DomainError.UserExists -> {
-                call.respondText(
-                    "A user with email ${error.email} already exists",
-                    status = HttpStatusCode.Conflict
-                )
-            }
-
-            is DataError -> {
-                call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
-                )
-                logger.error(error.throwable)
-            }
-
-            else -> {
-                call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
-                )
-            }
-        }
-    }
-)
+        )
 
 suspend fun PipelineContext<Unit, ApplicationCall>.resendVerifyEmail(userService: UserService) =
-    call.principal<JWTPrincipal>()
+    call
+        .principal<JWTPrincipal>()
         .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
-        }
+        .andThen { principal -> userService.getIdFor(principal) }
         .andThen { userId -> userService.requestVerifyEmailResend(userId) }
         .mapBoth(
-            success = {
-                call.respondText("Verification email resent", status = HttpStatusCode.OK)
-            },
+            success = { call.respondText("Verification email resent", status = HttpStatusCode.OK) },
             failure = { error ->
                 when (error) {
                     DomainError.EmailVerified -> {
-                        call.respondText("Email is already verified", status = HttpStatusCode.BadRequest)
+                        call.respondText(
+                            "Email is already verified",
+                            status = HttpStatusCode.BadRequest
+                        )
                     }
-
                     DomainError.RateLimitExceeded -> {
                         call.respondText("Rate limit exceeded", status = HttpStatusCode.BadRequest)
                     }
-
                     is DataError -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -279,7 +269,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.resendVerifyEmail(userService
                         )
                         logger.error(error.throwable)
                     }
-
                     else -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -290,95 +279,53 @@ suspend fun PipelineContext<Unit, ApplicationCall>.resendVerifyEmail(userService
             }
         )
 
-@Serializable
-data class PasswordChange(val currentPassword: String, val newPassword: String)
+@Serializable data class PasswordChange(val currentPassword: String, val newPassword: String)
 
-suspend fun PipelineContext<Unit, ApplicationCall>.changePassword(userService: UserService) = binding {
-    val userId = call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
+suspend fun PipelineContext<Unit, ApplicationCall>.changePassword(userService: UserService) =
+    binding {
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
+
+            val passwordChange =
+                runCatching { call.receive<PasswordChange>() }
+                    .mapError { WebError.InputInvalid }
+                    .bind()
+
+            userService
+                .updatePassword(userId, passwordChange.currentPassword, passwordChange.newPassword)
+                .bind()
         }
-        .bind()
-
-    val passwordChange = runCatching { call.receive<PasswordChange>() }
-        .mapError { WebError.InputInvalid }
-        .bind()
-
-    userService.updatePassword(userId, passwordChange.currentPassword, passwordChange.newPassword).bind()
-}.mapBoth(
-    success = {
-        call.respondText("Password changed", status = HttpStatusCode.OK)
-    },
-    failure = { error ->
-        when (error) {
-            WebError.InputInvalid -> {
-                call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
-            }
-
-            WebError.PrincipalInvalid, DomainError.AccessTokenInvalid, DomainError.UserNotFound -> {
-                call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
-            }
-
-            DomainError.EmailUnverified -> {
-                call.respondText("Verify your email address first", status = HttpStatusCode.BadRequest)
-            }
-
-            is DomainError.PasswordInvalid -> {
-                call.respondText(error.details, status = HttpStatusCode.BadRequest)
-            }
-
-            DomainError.PasswordIncorrect -> {
-                call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
-            }
-
-            is DataError -> {
-                call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
-                )
-                logger.error(error.throwable)
-            }
-
-            else -> {
-                call.respondText(
-                    "An unexpected error occurred",
-                    status = HttpStatusCode.InternalServerError
-                )
-            }
-        }
-    }
-)
-
-@Serializable
-data class EmailVerification(val verifyToken: String, val email: String)
-
-private suspend fun PipelineContext<Unit, ApplicationCall>.verifyEmail(userService: UserService) =
-    runCatching { call.receive<EmailVerification>() }
-        .mapError { WebError.InputInvalid }
-        .andThen { verification -> userService.verifyEmail(verification.verifyToken, verification.email) }
         .mapBoth(
-            success = {
-                call.respondText("Email change successful", status = HttpStatusCode.OK)
-            },
+            success = { call.respondText("Password changed", status = HttpStatusCode.OK) },
             failure = { error ->
                 when (error) {
                     WebError.InputInvalid -> {
                         call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
                     }
-
-                    DomainError.EmailIncorrect -> {
-                        call.respondText("Incorrect email", status = HttpStatusCode.Unauthorized)
-                    }
-
+                    WebError.PrincipalInvalid,
+                    DomainError.AccessTokenInvalid,
                     DomainError.UserNotFound -> {
-                        call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
+                        call.respondText("Invalid user", status = HttpStatusCode.Unauthorized)
                     }
-
-                    DomainError.VerifyTokenNotFound, DomainError.VerifyTokenExpired -> {
-                        call.respondText("Invalid verification token", status = HttpStatusCode.BadRequest)
+                    DomainError.EmailUnverified -> {
+                        call.respondText(
+                            "Verify your email address first",
+                            status = HttpStatusCode.BadRequest
+                        )
                     }
-
+                    is DomainError.PasswordInvalid -> {
+                        call.respondText(error.details, status = HttpStatusCode.BadRequest)
+                    }
+                    DomainError.PasswordIncorrect -> {
+                        call.respondText(
+                            "Invalid credentials",
+                            status = HttpStatusCode.Unauthorized
+                        )
+                    }
                     is DataError -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -386,7 +333,6 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.verifyEmail(userServi
                         )
                         logger.error(error.throwable)
                     }
-
                     else -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -397,11 +343,63 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.verifyEmail(userServi
             }
         )
 
-private suspend fun PipelineContext<Unit, ApplicationCall>.forgotPassword(userService: UserService) =
+@Serializable data class EmailVerification(val verifyToken: String, val email: String)
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.verifyEmail(userService: UserService) =
+    runCatching { call.receive<EmailVerification>() }
+        .mapError { WebError.InputInvalid }
+        .andThen { verification ->
+            userService.verifyEmail(verification.verifyToken, verification.email)
+        }
+        .mapBoth(
+            success = { call.respondText("Email change successful", status = HttpStatusCode.OK) },
+            failure = { error ->
+                when (error) {
+                    WebError.InputInvalid -> {
+                        call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
+                    }
+                    DomainError.EmailIncorrect -> {
+                        call.respondText("Incorrect email", status = HttpStatusCode.Unauthorized)
+                    }
+                    DomainError.UserNotFound -> {
+                        call.respondText(
+                            "Invalid credentials",
+                            status = HttpStatusCode.Unauthorized
+                        )
+                    }
+                    DomainError.VerifyTokenNotFound,
+                    DomainError.VerifyTokenExpired -> {
+                        call.respondText(
+                            "Invalid verification token",
+                            status = HttpStatusCode.BadRequest
+                        )
+                    }
+                    is DataError -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                        logger.error(error.throwable)
+                    }
+                    else -> {
+                        call.respondText(
+                            "An unexpected error occurred",
+                            status = HttpStatusCode.InternalServerError
+                        )
+                    }
+                }
+            }
+        )
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.forgotPassword(
+    userService: UserService
+) =
     runCatching { call.receiveText() }
         .mapError { WebError.InputInvalid }
         .andThen { email -> userService.getByEmail(email) }
-        .andThen { user -> userService.requestPasswordResetToken(user.id, user.email, user.displayName) }
+        .andThen { user ->
+            userService.requestPasswordResetToken(user.id, user.email, user.displayName)
+        }
         .mapBoth(
             success = {
                 call.respondText("Password reset email sent", status = HttpStatusCode.Accepted)
@@ -411,12 +409,13 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.forgotPassword(userSe
                     WebError.InputInvalid -> {
                         call.respondText("Invalid email", status = HttpStatusCode.BadRequest)
                     }
-
                     DomainError.UserNotFound -> {
                         // Casually lie to the user
-                        call.respondText("Password reset email sent", status = HttpStatusCode.Accepted)
+                        call.respondText(
+                            "Password reset email sent",
+                            status = HttpStatusCode.Accepted
+                        )
                     }
-
                     is DataError -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -424,7 +423,6 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.forgotPassword(userSe
                         )
                         logger.error(error.throwable)
                     }
-
                     else -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -435,31 +433,29 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.forgotPassword(userSe
             }
         )
 
-@Serializable
-data class PasswordReset(val resetToken: String, val newPassword: String)
+@Serializable data class PasswordReset(val resetToken: String, val newPassword: String)
 
 suspend fun PipelineContext<Unit, ApplicationCall>.resetPassword(userService: UserService) =
     runCatching { call.receive<PasswordReset>() }
         .mapError { WebError.InputInvalid }
-        .andThen { passwordReset -> userService.resetPassword(passwordReset.resetToken, passwordReset.newPassword) }
+        .andThen { passwordReset ->
+            userService.resetPassword(passwordReset.resetToken, passwordReset.newPassword)
+        }
         .mapBoth(
-            success = {
-                call.respondText("Password reset successful", status = HttpStatusCode.OK)
-            },
+            success = { call.respondText("Password reset successful", status = HttpStatusCode.OK) },
             failure = { error ->
                 when (error) {
                     WebError.InputInvalid -> {
                         call.respondText("Invalid request", status = HttpStatusCode.BadRequest)
                     }
-
                     is DomainError.PasswordInvalid -> {
                         call.respondText(error.details, status = HttpStatusCode.BadRequest)
                     }
-
-                    DomainError.ResetTokenNotFound, DomainError.UserNotFound, DomainError.ResetTokenExpired -> {
+                    DomainError.ResetTokenNotFound,
+                    DomainError.UserNotFound,
+                    DomainError.ResetTokenExpired -> {
                         call.respondText("Invalid reset token", status = HttpStatusCode.BadRequest)
                     }
-
                     is DataError -> {
                         call.respondText(
                             "An unexpected error occurred",
@@ -467,7 +463,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.resetPassword(userService: Us
                         )
                         logger.error(error.throwable)
                     }
-
                     else -> {
                         call.respondText(
                             "An unexpected error occurred",

@@ -12,9 +12,9 @@ validator = "0.6.0"
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
-ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "0.13.0" }
 
-spotless = { id = "com.diffplug.spotless", version = "6.20.0" }
+ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 

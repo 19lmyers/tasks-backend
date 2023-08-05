@@ -40,3 +40,5 @@ out/
 service-account.json
 
 assets
+
+.DS_Store

@@ -13,29 +13,33 @@ fun initScheduler() {
 
     // Reminder notifications (FCM)
 
-    val reminderJob = JobBuilder.newJob()
-        .ofType(PushReminderJob::class.java)
-        .withIdentity("PushReminderJob")
-        .build()
+    val reminderJob =
+        JobBuilder.newJob()
+            .ofType(PushReminderJob::class.java)
+            .withIdentity("PushReminderJob")
+            .build()
 
-    val reminderTrigger = TriggerBuilder.newTrigger()
-        .withSchedule(SimpleScheduleBuilder.repeatMinutelyForever())
-        .withIdentity("PushReminderTrigger")
-        .build()
+    val reminderTrigger =
+        TriggerBuilder.newTrigger()
+            .withSchedule(SimpleScheduleBuilder.repeatMinutelyForever())
+            .withIdentity("PushReminderTrigger")
+            .build()
 
     scheduler.scheduleJob(reminderJob, reminderTrigger)
 
     // Password reset token expiry
 
-    val tokenExpiryJob = JobBuilder.newJob()
-        .ofType(TokenExpiryJob::class.java)
-        .withIdentity("TokenExpiryJob")
-        .build()
+    val tokenExpiryJob =
+        JobBuilder.newJob()
+            .ofType(TokenExpiryJob::class.java)
+            .withIdentity("TokenExpiryJob")
+            .build()
 
-    val tokenExpiryTrigger = TriggerBuilder.newTrigger()
-        .withSchedule(SimpleScheduleBuilder.repeatHourlyForever())
-        .withIdentity("TokenExpiryTrigger")
-        .build()
+    val tokenExpiryTrigger =
+        TriggerBuilder.newTrigger()
+            .withSchedule(SimpleScheduleBuilder.repeatHourlyForever())
+            .withIdentity("TokenExpiryTrigger")
+            .build()
 
     scheduler.scheduleJob(tokenExpiryJob, tokenExpiryTrigger)
 

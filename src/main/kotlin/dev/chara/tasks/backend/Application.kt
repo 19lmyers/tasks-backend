@@ -25,8 +25,10 @@ import org.koin.ktor.plugin.Koin
 fun main() {
     embeddedServer(Netty, port = 8123) {
             install(Koin) { modules(appModule()) }
+
             module()
         }
+
         .start(wait = true)
 }
 
@@ -38,7 +40,8 @@ fun Application.module() {
                 encodeDefaults = true
                 explicitNulls = false
                 ignoreUnknownKeys = true
-            })
+            }
+        )
     }
 
     install(Firebase)
@@ -50,7 +53,9 @@ fun Application.module() {
             validate { credential -> JWTPrincipal(credential.payload) }
             challenge { _, _ ->
                 call.respondText(
-                    "Access token invalid or expired", status = HttpStatusCode.Unauthorized)
+                    "Access token invalid or expired",
+                    status = HttpStatusCode.Unauthorized
+                )
             }
         }
     }

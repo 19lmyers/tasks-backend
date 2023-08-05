@@ -37,73 +37,64 @@ fun Route.profile() {
 }
 
 suspend fun PipelineContext<Unit, ApplicationCall>.get(userService: UserService) =
-    call.principal<JWTPrincipal>()
+    call
+        .principal<JWTPrincipal>()
         .toResultOr { WebError.PrincipalInvalid }
         .andThen { principal -> userService.getIdFor(principal) }
         .andThen { id -> userService.getAsProfile(id) }
         .mapBoth(
-            success = { profile ->
-                call.respond(profile)
-            },
-            failure = { error ->
-                handleError(error)
-            }
+            success = { profile -> call.respond(profile) },
+            failure = { error -> handleError(error) }
         )
 
 suspend fun PipelineContext<Unit, ApplicationCall>.put(userService: UserService) {
     binding {
-        val userId = call.principal<JWTPrincipal>()
-            .toResultOr { WebError.PrincipalInvalid }
-            .andThen { principal ->
-                userService.getIdFor(principal)
-            }
-            .bind()
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
 
-        val profile = runCatching { call.receive<Profile>() }
-            .mapError { WebError.InputInvalid }
-            .bind()
+            val profile =
+                runCatching { call.receive<Profile>() }.mapError { WebError.InputInvalid }.bind()
 
-        userService.updateProfile(userId, profile)
-    }.mapBoth(
-        success = {
-            call.respondText("Profile updated", status = HttpStatusCode.OK)
-        },
-        failure = { error ->
-            handleError(error)
+            userService.updateProfile(userId, profile)
         }
-    )
+        .mapBoth(
+            success = { call.respondText("Profile updated", status = HttpStatusCode.OK) },
+            failure = { error -> handleError(error) }
+        )
 }
 
 suspend fun PipelineContext<Unit, ApplicationCall>.uploadPhoto(userService: UserService) {
     binding {
-        val userId = call.principal<JWTPrincipal>()
-            .toResultOr { WebError.PrincipalInvalid }
-            .andThen { principal ->
-                userService.getIdFor(principal)
-            }
-            .bind()
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
 
-        val photoBytes = runCatching { call.receiveMultipart() }
-            .mapError { WebError.InputInvalid }
-            .andThen { multiPartData ->
-                multiPartData.readPart().toResultOr { WebError.InputInvalid }
-            }
-            .andThen { part ->
-                if (part is PartData.FileItem) {
-                    Ok(part.streamProvider().readBytes())
-                } else {
-                    Err(WebError.InputInvalid)
-                }
-            }
-            .bind()
+            val photoBytes =
+                runCatching { call.receiveMultipart() }
+                    .mapError { WebError.InputInvalid }
+                    .andThen { multiPartData ->
+                        multiPartData.readPart().toResultOr { WebError.InputInvalid }
+                    }
+                    .andThen { part ->
+                        if (part is PartData.FileItem) {
+                            Ok(part.streamProvider().readBytes())
+                        } else {
+                            Err(WebError.InputInvalid)
+                        }
+                    }
+                    .bind()
 
-        userService.uploadProfilePhoto(userId, photoBytes).bind()
-    }.mapBoth(
-        success = {
-            call.respondText("Profile photo set", status = HttpStatusCode.OK)
-        },
-        failure = { error ->
-            handleError(error)
+            userService.uploadProfilePhoto(userId, photoBytes).bind()
         }
-    )
+        .mapBoth(
+            success = { call.respondText("Profile photo set", status = HttpStatusCode.OK) },
+            failure = { error -> handleError(error) }
+        )
 }

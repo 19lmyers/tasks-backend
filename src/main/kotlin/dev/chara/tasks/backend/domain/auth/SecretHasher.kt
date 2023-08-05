@@ -7,8 +7,7 @@ class SecretHasher {
     private val hasher = BCrypt.withDefaults()
     private val verifier = BCrypt.verifyer()
 
-    fun hash(secret: String): ByteArray =
-        hasher.hash(HASH_COST, secret.toCharArray())
+    fun hash(secret: String): ByteArray = hasher.hash(HASH_COST, secret.toCharArray())
 
     fun verify(challenge: String, hashed: ByteArray): Boolean =
         verifier.verify(challenge.toCharArray(), hashed).verified

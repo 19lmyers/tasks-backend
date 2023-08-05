@@ -4,8 +4,8 @@ import com.chrynan.validator.assertContains
 import com.chrynan.validator.isInvalid
 import com.chrynan.validator.isValid
 import dev.chara.tasks.backend.domain.auth.PasswordValidator
-import org.junit.Test
 import kotlin.test.assertTrue
+import org.junit.Test
 
 class PasswordValidatorTest {
 
@@ -42,5 +42,4 @@ class PasswordValidatorTest {
         val result = validator.validate("soldier-freeze-jamaican-incident")
         assertTrue(result.isValid)
     }
-
 }

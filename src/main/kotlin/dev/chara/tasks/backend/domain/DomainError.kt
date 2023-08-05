@@ -8,12 +8,15 @@ sealed class DomainError : ApplicationError {
     data object EmailIncorrect : DomainError()
 
     data class PasswordInvalid(val details: String) : DomainError()
+
     data object PasswordIncorrect : DomainError()
 
     data object UserNotFound : DomainError()
+
     data class UserExists(val email: String) : DomainError()
 
     data object AccessTokenInvalid : DomainError()
+
     data object RefreshTokenInvalid : DomainError()
 
     data object EmailUnverified : DomainError()
@@ -21,12 +24,15 @@ sealed class DomainError : ApplicationError {
     data object EmailVerified : DomainError()
 
     data object VerifyTokenNotFound : DomainError()
+
     data object VerifyTokenExpired : DomainError()
 
     data object ResetTokenNotFound : DomainError()
+
     data object ResetTokenExpired : DomainError()
 
     data object ListTitleRequired : DomainError()
+
     data object ListNotFound : DomainError()
 
     data object TaskNotFound : DomainError()

@@ -11,9 +11,7 @@ abstract class CoroutineJob : Job, KoinComponent {
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     final override fun execute(context: JobExecutionContext?) {
-        coroutineScope.launch {
-            executeAsCoroutine(context)
-        }
+        coroutineScope.launch { executeAsCoroutine(context) }
     }
 
     abstract suspend fun executeAsCoroutine(context: JobExecutionContext?)

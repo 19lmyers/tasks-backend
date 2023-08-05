@@ -51,118 +51,111 @@ fun Route.lists() {
 suspend fun PipelineContext<Unit, ApplicationCall>.getLists(
     userService: UserService,
     taskListService: TaskListService
-) = call.principal<JWTPrincipal>()
-    .toResultOr { WebError.PrincipalInvalid }
-    .andThen { principal ->
-        userService.getIdFor(principal)
-    }.andThen { userId ->
-        taskListService.getForUser(userId)
-    }.mapBoth(
-        success = { taskLists ->
-            call.respond(taskLists)
-        },
-        failure = { error ->
-            handleError(error)
-        }
-    )
+) =
+    call
+        .principal<JWTPrincipal>()
+        .toResultOr { WebError.PrincipalInvalid }
+        .andThen { principal -> userService.getIdFor(principal) }
+        .andThen { userId -> taskListService.getForUser(userId) }
+        .mapBoth(
+            success = { taskLists -> call.respond(taskLists) },
+            failure = { error -> handleError(error) }
+        )
 
 suspend fun PipelineContext<Unit, ApplicationCall>.postList(
     userService: UserService,
     taskListService: TaskListService
-) = binding {
-    val userId = call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
-        }.bind()
+) =
+    binding {
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
 
-    val taskList = runCatching { call.receive<TaskList>() }
-        .mapError { WebError.InputInvalid }
-        .bind()
+            val taskList =
+                runCatching { call.receive<TaskList>() }.mapError { WebError.InputInvalid }.bind()
 
-    taskListService.insert(userId, taskList).bind()
-}.mapBoth(
-    success = { id ->
-        call.respondText("Task list $id created", status = HttpStatusCode.Created)
-    },
-    failure = { error ->
-        handleError(error)
-    }
-)
+            taskListService.insert(userId, taskList).bind()
+        }
+        .mapBoth(
+            success = { id ->
+                call.respondText("Task list $id created", status = HttpStatusCode.Created)
+            },
+            failure = { error -> handleError(error) }
+        )
 
 suspend fun PipelineContext<Unit, ApplicationCall>.getListById(
     userService: UserService,
     taskListService: TaskListService
-) = binding {
-    val userId = call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
-        }.bind()
+) =
+    binding {
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
 
-    val listId = call.parameters.getAsResult("id").bind()
+            val listId = call.parameters.getAsResult("id").bind()
 
-    taskListService.getByIds(userId, listId).bind()
-}.mapBoth(
-    success = { list ->
-        call.respond(list)
-    },
-    failure = { error ->
-        handleError(error)
-    }
-)
-
+            taskListService.getByIds(userId, listId).bind()
+        }
+        .mapBoth(
+            success = { list -> call.respond(list) },
+            failure = { error -> handleError(error) }
+        )
 
 suspend fun PipelineContext<Unit, ApplicationCall>.putListById(
     userService: UserService,
     taskListService: TaskListService
-) = binding {
-    val userId = call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
-        }.bind()
+) =
+    binding {
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
 
-    val listId = call.parameters.getAsResult("id")
-        .andThen { listId ->
-            taskListService.getIdFor(userId, listId)
-        }.bind()
+            val listId =
+                call.parameters
+                    .getAsResult("id")
+                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .bind()
 
-    val taskList = runCatching { call.receive<TaskList>() }
-        .mapError { WebError.InputInvalid }
-        .bind()
+            val taskList =
+                runCatching { call.receive<TaskList>() }.mapError { WebError.InputInvalid }.bind()
 
-    taskListService.update(userId, listId, taskList).bind()
-}.mapBoth(
-    success = {
-        call.respondText("Task list updated", status = HttpStatusCode.OK)
-    },
-    failure = { error ->
-        handleError(error)
-    }
-)
+            taskListService.update(userId, listId, taskList).bind()
+        }
+        .mapBoth(
+            success = { call.respondText("Task list updated", status = HttpStatusCode.OK) },
+            failure = { error -> handleError(error) }
+        )
 
 suspend fun PipelineContext<Unit, ApplicationCall>.deleteListById(
     userService: UserService,
     taskListService: TaskListService
-) = binding {
-    val userId = call.principal<JWTPrincipal>()
-        .toResultOr { WebError.PrincipalInvalid }
-        .andThen { principal ->
-            userService.getIdFor(principal)
-        }.bind()
+) =
+    binding {
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
 
-    val listId = call.parameters.getAsResult("id")
-        .andThen { listId ->
-            taskListService.getIdFor(userId, listId)
-        }.bind()
+            val listId =
+                call.parameters
+                    .getAsResult("id")
+                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .bind()
 
-    taskListService.delete(userId, listId).bind()
-}.mapBoth(
-    success = {
-        call.respondText("Task list deleted", status = HttpStatusCode.Accepted)
-    },
-    failure = { error ->
-        handleError(error)
-    }
-)
+            taskListService.delete(userId, listId).bind()
+        }
+        .mapBoth(
+            success = { call.respondText("Task list deleted", status = HttpStatusCode.Accepted) },
+            failure = { error -> handleError(error) }
+        )

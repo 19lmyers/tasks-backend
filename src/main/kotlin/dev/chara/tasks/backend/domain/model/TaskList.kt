@@ -14,7 +14,6 @@ data class TaskList(
     val icon: Icon? = null,
     val description: String? = null,
 
-    val isPinned: Boolean = false,
     val showIndexNumbers: Boolean = false,
 
     val sortType: SortType = SortType.ORDINAL,
@@ -87,7 +86,6 @@ fun DbTaskList.toModel() = TaskList(
     color,
     icon,
     description,
-    is_pinned,
     show_index_numbers,
     sort_type,
     sort_direction,

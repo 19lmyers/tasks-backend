@@ -1,0 +1,3 @@
+ALTER TABLE TaskList DROP COLUMN is_pinned;
+
+UPDATE DbMeta SET db_version = 3;

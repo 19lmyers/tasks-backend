@@ -27,7 +27,6 @@ fun main() {
             install(Koin) { modules(appModule()) }
             module()
         }
-
         .start(wait = true)
 }
 

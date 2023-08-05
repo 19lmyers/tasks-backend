@@ -24,21 +24,21 @@ import org.koin.ktor.plugin.Koin
 @Suppress("ExtractKtorModule")
 fun main() {
     embeddedServer(Netty, port = 8123) {
-        install(Koin) {
-            modules(appModule())
+            install(Koin) { modules(appModule()) }
+            module()
         }
-        module()
-    }.start(wait = true)
+        .start(wait = true)
 }
 
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.module() {
     install(ContentNegotiation) {
-        json(Json {
-            encodeDefaults = true
-            explicitNulls = false
-            ignoreUnknownKeys = true
-        })
+        json(
+            Json {
+                encodeDefaults = true
+                explicitNulls = false
+                ignoreUnknownKeys = true
+            })
     }
 
     install(Firebase)
@@ -47,18 +47,15 @@ fun Application.module() {
     install(Authentication) {
         jwt {
             verifier(jwtProvider.accessVerifier)
-            validate { credential ->
-                JWTPrincipal(credential.payload)
-            }
+            validate { credential -> JWTPrincipal(credential.payload) }
             challenge { _, _ ->
-                call.respondText("Access token invalid or expired", status = HttpStatusCode.Unauthorized)
+                call.respondText(
+                    "Access token invalid or expired", status = HttpStatusCode.Unauthorized)
             }
         }
     }
 
-    install(Routing) {
-        main()
-    }
+    install(Routing) { main() }
 
     install(CORS) {
         allowMethod(HttpMethod.Options)

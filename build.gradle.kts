@@ -8,19 +8,18 @@ plugins {
 
     alias(libs.plugins.sqldelight)
 
+    alias(libs.plugins.spotless)
+
     alias(libs.plugins.versions)
 }
 
 group = "dev.chara"
+
 version = "0.3"
 
-kotlin {
-    jvmToolchain(17)
-}
+kotlin { jvmToolchain(17) }
 
-application {
-    mainClass.set("dev.chara.tasks.backend.ApplicationKt")
-}
+application { mainClass.set("dev.chara.tasks.backend.ApplicationKt") }
 
 dependencies {
     implementation(libs.ktor.server.core)
@@ -76,10 +75,19 @@ sqldelight {
             dialect(libs.sqldelight.dialect)
 
             packageName.set("dev.chara.tasks.backend.data.sql")
-            version = 2
+            version = 3
 
             deriveSchemaFromMigrations.set(true)
             verifyMigrations.set(true)
         }
     }
+}
+
+spotless {
+    // ratchetFrom("origin/main")
+    kotlin {
+        ktfmt().dropboxStyle()
+        licenseHeaderFile("LICENSE")
+    }
+    kotlinGradle { ktfmt().dropboxStyle() }
 }

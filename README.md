@@ -31,7 +31,7 @@ The authentication system uses a JWT-based token to authenticate users, alongsid
 lived.
 This design requires client applications to manually persist and refresh tokens, but is altogether easy to implement.
 
-# Developer note
+## For developers
 
 For code linting before each commit, change the project's git hooks directory with this command:
 

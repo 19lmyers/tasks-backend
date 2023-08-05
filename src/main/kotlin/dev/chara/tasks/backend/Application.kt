@@ -25,10 +25,8 @@ import org.koin.ktor.plugin.Koin
 fun main() {
     embeddedServer(Netty, port = 8123) {
             install(Koin) { modules(appModule()) }
-
             module()
         }
-
         .start(wait = true)
 }
 

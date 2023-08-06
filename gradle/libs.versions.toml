@@ -1,7 +1,7 @@
 [versions]
 
 kotlin = "1.9.0"
-ktor = "2.3.2"
+ktor = "2.3.3"
 sqldelight = "2.0.0"
 
 result = "1.1.18"
@@ -32,8 +32,8 @@ firebase-admin = { module = "com.google.firebase:firebase-admin", version = "9.2
 
 hikari-cp = { module = "com.zaxxer:HikariCP", version = "5.0.1" }
 
-koin-ktor = { module = "io.insert-koin:koin-ktor", version = "3.4.1" }
-koin-test = { module = "io.insert-koin:koin-test", version = "3.4.1" }
+koin-ktor = { module = "io.insert-koin:koin-ktor", version = "3.4.3" }
+koin-test = { module = "io.insert-koin:koin-test", version = "3.4.3" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
@@ -57,7 +57,7 @@ ktor-server-test = { module = "io.ktor:ktor-server-test-host", version.ref = "kt
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-network-tls-certificates = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor" }
 
-logback = { module = "ch.qos.logback:logback-classic", version = "1.4.8" }
+logback = { module = "ch.qos.logback:logback-classic", version = "1.4.9" }
 
 mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.1.4" }
 

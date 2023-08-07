@@ -75,7 +75,7 @@ sqldelight {
             dialect(libs.sqldelight.dialect)
 
             packageName.set("dev.chara.tasks.backend.data.sql")
-            version = 3
+            version = 4
 
             deriveSchemaFromMigrations.set(true)
             verifyMigrations.set(true)

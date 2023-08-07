@@ -6,6 +6,7 @@ import dev.chara.tasks.backend.data.repository.TaskListRepository
 import dev.chara.tasks.backend.domain.DomainError
 import dev.chara.tasks.backend.domain.model.TaskList
 import dev.chara.tasks.backend.util.toErrorIfNull
+import kotlinx.datetime.Instant
 
 class TaskListService(private val repository: TaskListRepository) {
 
@@ -29,6 +30,14 @@ class TaskListService(private val repository: TaskListRepository) {
 
     fun update(userId: String, listId: String, taskList: TaskList) =
         repository.update(userId, listId, taskList)
+
+    fun reorder(
+        userId: String,
+        listId: String,
+        fromIndex: Int,
+        toIndex: Int,
+        lastModified: Instant
+    ) = repository.reorder(userId, listId, fromIndex, toIndex, lastModified)
 
     fun delete(userId: String, listId: String) = repository.delete(userId, listId)
 }

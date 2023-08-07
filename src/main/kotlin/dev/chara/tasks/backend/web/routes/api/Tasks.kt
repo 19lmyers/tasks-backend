@@ -2,6 +2,7 @@ package dev.chara.tasks.backend.web.routes.api
 
 import com.github.michaelbull.result.*
 import com.github.michaelbull.result.coroutines.binding.binding
+import dev.chara.tasks.backend.domain.model.Reorder
 import dev.chara.tasks.backend.domain.model.Task
 import dev.chara.tasks.backend.domain.service.TaskListService
 import dev.chara.tasks.backend.domain.service.TaskService
@@ -280,8 +281,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.moveTaskByIds(
             success = { call.respondText("Task moved", status = HttpStatusCode.OK) },
             failure = { error -> handleError(error) }
         )
-
-@Serializable data class Reorder(val fromIndex: Int, val toIndex: Int, val lastModified: Instant)
 
 suspend fun PipelineContext<Unit, ApplicationCall>.reorderTaskByIds(
     userService: UserService,

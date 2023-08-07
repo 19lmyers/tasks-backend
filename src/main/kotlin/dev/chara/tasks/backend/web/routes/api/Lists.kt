@@ -2,6 +2,7 @@ package dev.chara.tasks.backend.web.routes.api
 
 import com.github.michaelbull.result.*
 import com.github.michaelbull.result.coroutines.binding.binding
+import dev.chara.tasks.backend.domain.model.Reorder
 import dev.chara.tasks.backend.domain.model.TaskList
 import dev.chara.tasks.backend.domain.service.TaskListService
 import dev.chara.tasks.backend.domain.service.UserService
@@ -43,6 +44,10 @@ fun Route.lists() {
             delete {
                 logTrace("Deleting list")
                 deleteListById(userService, taskListService)
+            }
+            post("/reorder") {
+                logTrace("Reordering lists")
+                reorderListById(userService, taskListService)
             }
         }
     }
@@ -157,5 +162,35 @@ suspend fun PipelineContext<Unit, ApplicationCall>.deleteListById(
         }
         .mapBoth(
             success = { call.respondText("Task list deleted", status = HttpStatusCode.Accepted) },
+            failure = { error -> handleError(error) }
+        )
+
+suspend fun PipelineContext<Unit, ApplicationCall>.reorderListById(
+    userService: UserService,
+    taskListService: TaskListService,
+) =
+    binding {
+            val userId =
+                call
+                    .principal<JWTPrincipal>()
+                    .toResultOr { WebError.PrincipalInvalid }
+                    .andThen { principal -> userService.getIdFor(principal) }
+                    .bind()
+
+            val reorder =
+                runCatching { call.receive<Reorder>() }.mapError { WebError.InputInvalid }.bind()
+
+            val listId =
+                call.parameters
+                    .getAsResult("id")
+                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .bind()
+
+            taskListService
+                .reorder(userId, listId, reorder.fromIndex, reorder.toIndex, reorder.lastModified)
+                .bind()
+        }
+        .mapBoth(
+            success = { call.respondText("Task lists reordered", status = HttpStatusCode.OK) },
             failure = { error -> handleError(error) }
         )

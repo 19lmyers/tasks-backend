@@ -15,7 +15,8 @@ data class TaskList(
     val sortType: SortType = SortType.ORDINAL,
     val sortDirection: SortDirection = SortDirection.ASCENDING,
     val dateCreated: Instant? = null,
-    val lastModified: Instant
+    val lastModified: Instant,
+    val ordinal: Int = -1
 ) {
     @Serializable
     enum class Color {
@@ -86,5 +87,6 @@ fun DbTaskList.toModel() =
         sort_type,
         sort_direction,
         date_created,
-        last_modified
+        last_modified,
+        ordinal
     )

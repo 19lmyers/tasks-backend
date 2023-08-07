@@ -8,7 +8,8 @@ LIMIT 1;
 getByUser:
 SELECT *
 FROM TaskList
-WHERE user_id = ?;
+WHERE user_id = ?
+ORDER BY ordinal ASC;
 
 getMaxOrdinal:
 SELECT MAX(tl.ordinal)

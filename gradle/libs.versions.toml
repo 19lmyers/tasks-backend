@@ -1,6 +1,6 @@
 [versions]
 
-kotlin = "1.9.0"
+kotlin = "1.9.10"
 ktor = "2.3.3"
 sqldelight = "2.0.0"
 
@@ -59,7 +59,7 @@ ktor-network-tls-certificates = { module = "io.ktor:ktor-network-tls-certificate
 
 logback = { module = "ch.qos.logback:logback-classic", version = "1.4.11" }
 
-mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.1.4" }
+mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.2.0" }
 
 mockk = { module = "io.mockk:mockk", version = "1.13.7" }
 

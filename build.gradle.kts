@@ -17,7 +17,7 @@ group = "dev.chara"
 
 version = "0.3"
 
-kotlin { jvmToolchain(17) }
+kotlin { jvmToolchain(21) }
 
 application { mainClass.set("dev.chara.tasks.backend.ApplicationKt") }
 
@@ -84,3 +84,14 @@ sqldelight {
 }
 
 ktfmt { kotlinLangStyle() }
+
+// Fix the wrong version of Guava listenablefuture being pulled in
+configurations.all {
+    resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
+        select("com.google.guava:guava:0")
+    }
+    // and/or
+    resolutionStrategy.capabilitiesResolution.withCapability("com.google.guava:listenablefuture") {
+        select("com.google.guava:guava:0")
+    }
+}

@@ -1,7 +1,7 @@
 [versions]
 
-kotlin = "1.9.10"
-ktor = "2.3.3"
+kotlin = "1.9.21"
+ktor = "2.3.6"
 sqldelight = "2.0.0"
 
 result = "1.1.18"
@@ -12,13 +12,13 @@ validator = "0.6.0"
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
-ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "0.13.0" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "0.15.1" }
 
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 
-versions = { id = "com.github.ben-manes.versions", version = "0.47.0" }
+versions = { id = "com.github.ben-manes.versions", version = "0.50.0" }
 
 [libraries]
 
@@ -30,14 +30,14 @@ dotenv = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.4.1" }
 
 firebase-admin = { module = "com.google.firebase:firebase-admin", version = "9.2.0" }
 
-hikari-cp = { module = "com.zaxxer:HikariCP", version = "5.0.1" }
+hikari-cp = { module = "com.zaxxer:HikariCP", version = "5.1.0" }
 
-koin-ktor = { module = "io.insert-koin:koin-ktor", version = "3.4.3" }
-koin-test = { module = "io.insert-koin:koin-test", version = "3.4.3" }
+koin-ktor = { module = "io.insert-koin:koin-ktor", version = "3.5.2-RC1" }
+koin-test = { module = "io.insert-koin:koin-test", version = "3.5.2-RC1" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.0" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.1" }
 
 kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result", version.ref = "result" }
 kotlin-result-coroutines = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version.ref = "result" }
@@ -57,11 +57,11 @@ ktor-server-test = { module = "io.ktor:ktor-server-test-host", version.ref = "kt
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-network-tls-certificates = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor" }
 
-logback = { module = "ch.qos.logback:logback-classic", version = "1.4.11" }
+logback = { module = "ch.qos.logback:logback-classic", version = "1.4.13" }
 
-mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.2.0" }
+mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version = "3.3.1" }
 
-mockk = { module = "io.mockk:mockk", version = "1.13.7" }
+mockk = { module = "io.mockk:mockk", version = "1.13.8" }
 
 nbvcxz = { module = "me.gosimple:nbvcxz", version = "1.5.1" }
 

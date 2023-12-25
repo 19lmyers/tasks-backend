@@ -4,8 +4,7 @@ services:
   nginx:
     build: nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "8804:8804"
     depends_on:
       - ktor
     restart: always
@@ -19,6 +18,7 @@ services:
       - assets:/assets
     depends_on:
       - mariadb
+      - gemini
     dns:
       - 8.8.8.8
     environment:
@@ -34,6 +34,8 @@ services:
       TASKS_ASSETS_FOLDER: "/assets"
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      GEMINI_HOST: "${GEMINI_HOST}"
+      GEMINI_PORT: "${GEMINI_PORT}"
     secrets:
       - google_service_account
       - ssl_private_key_jwk
@@ -48,17 +50,29 @@ services:
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
     restart: always
+  gemini:
+    build: gemini
+    volumes:
+      - classifiers:/classifiers
+    environment:
+      GOOGLE_API_KEY: "${GOOGLE_API_KEY}"
+    devices:
+      - /dev/kfd
+    security_opt:
+      - seccomp=unconfined
+    restart: always
 
 volumes:
   assets:
   db:
+  classifiers:
 
 secrets:
   google_service_account:
     file: /root/.tasks/service-account.json
   ssl_public_key_site:
-    file: /etc/letsencrypt/live/tasks-api.chara.dev/fullchain.pem
+    file: /etc/letsencrypt/live/dominaria.chara.dev/fullchain.pem
   ssl_private_key_site:
-    file: /etc/letsencrypt/live/tasks-api.chara.dev/privkey.pem
+    file: /etc/letsencrypt/live/dominaria.chara.dev/privkey.pem
   ssl_private_key_jwk:
     file: /root/.tasks/certs/private/jwk_private.pkcs

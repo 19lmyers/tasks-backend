@@ -16,7 +16,8 @@ data class TaskList(
     val sortDirection: SortDirection = SortDirection.ASCENDING,
     val dateCreated: Instant? = null,
     val lastModified: Instant,
-    val ordinal: Int = -1
+    val ordinal: Int = -1,
+    val classifierType: ClassifierType? = null
 ) {
     @Serializable
     enum class Color {
@@ -64,6 +65,7 @@ data class TaskList(
     enum class SortType {
         ORDINAL,
         LABEL,
+        CATEGORY,
         DATE_CREATED,
         UPCOMING,
         STARRED
@@ -73,6 +75,15 @@ data class TaskList(
     enum class SortDirection {
         ASCENDING,
         DESCENDING
+    }
+
+    @Serializable
+    enum class ClassifierType(private val consoleName: String) {
+        SHOPPING("shopping");
+
+        override fun toString(): String {
+            return consoleName
+        }
     }
 }
 
@@ -88,5 +99,6 @@ fun DbTaskList.toModel() =
         sort_direction,
         date_created,
         last_modified,
-        ordinal
+        ordinal,
+        classifier_type
     )

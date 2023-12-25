@@ -16,7 +16,8 @@ data class Task(
     val dueDate: Instant? = null,
     val dateCreated: Instant? = null,
     val lastModified: Instant,
-    val ordinal: Int = -1
+    val ordinal: Int = -1,
+    val category: String? = null
 )
 
 fun DbTask.toModel() =
@@ -31,5 +32,6 @@ fun DbTask.toModel() =
         due_date,
         date_created,
         last_modified,
-        ordinal
+        ordinal,
+        category
     )

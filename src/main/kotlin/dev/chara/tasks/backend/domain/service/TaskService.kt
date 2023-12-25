@@ -1,32 +1,55 @@
 package dev.chara.tasks.backend.domain.service
 
+import com.github.michaelbull.result.binding
 import com.github.michaelbull.result.map
+import com.github.michaelbull.result.onSuccess
+import dev.chara.tasks.backend.data.GeminiJobScheduler
+import dev.chara.tasks.backend.data.repository.TaskListRepository
 import dev.chara.tasks.backend.data.repository.TaskRepository
 import dev.chara.tasks.backend.domain.DomainError
 import dev.chara.tasks.backend.domain.model.Task
+import dev.chara.tasks.backend.domain.model.TaskList
 import dev.chara.tasks.backend.util.toErrorIfNull
 import kotlinx.datetime.Instant
 
-class TaskService(private val repository: TaskRepository) {
+class TaskService(
+    private val taskListRepository: TaskListRepository,
+    private val taskRepository: TaskRepository,
+    private val geminiJobScheduler: GeminiJobScheduler
+) {
 
     fun getIdFor(userId: String, listId: String, taskId: String) =
-        repository
+        taskRepository
             .getByIds(userId, listId, taskId)
             .toErrorIfNull { DomainError.TaskNotFound }
             .map { it.id!! }
 
-    fun getTasksByList(userId: String, listId: String) = repository.getByList(userId, listId)
+    fun getTasksByList(userId: String, listId: String) = taskRepository.getByList(userId, listId)
 
     fun getTaskByIds(userId: String, listId: String, taskId: String) =
-        repository.getByIds(userId, listId, taskId).toErrorIfNull { DomainError.TaskNotFound }
+        taskRepository.getByIds(userId, listId, taskId).toErrorIfNull { DomainError.TaskNotFound }
 
-    fun insert(userId: String, listId: String, task: Task) = repository.insert(userId, listId, task)
+    fun insert(userId: String, listId: String, task: Task) = binding {
+        val list = taskListRepository.getByIds(userId, listId).bind()
+
+        taskRepository
+            .insert(userId, listId, task)
+            .onSuccess { taskId ->
+                if (
+                    list?.classifierType == TaskList.ClassifierType.SHOPPING &&
+                        task.category == null
+                ) {
+                    geminiJobScheduler.predict(userId, listId, taskId, task.label)
+                }
+            }
+            .bind()
+    }
 
     fun update(userId: String, listId: String, taskId: String, task: Task) =
-        repository.update(userId, listId, taskId, task)
+        taskRepository.update(userId, listId, taskId, task)
 
     fun move(userId: String, newListId: String, taskId: String, lastModified: Instant) =
-        repository.move(userId, newListId, taskId, lastModified)
+        taskRepository.move(userId, newListId, taskId, lastModified)
 
     fun reorder(
         userId: String,
@@ -35,11 +58,11 @@ class TaskService(private val repository: TaskRepository) {
         fromIndex: Int,
         toIndex: Int,
         lastModified: Instant
-    ) = repository.reorder(userId, listId, taskId, fromIndex, toIndex, lastModified)
+    ) = taskRepository.reorder(userId, listId, taskId, fromIndex, toIndex, lastModified)
 
     fun delete(userId: String, listId: String, taskId: String) =
-        repository.delete(userId, listId, taskId)
+        taskRepository.delete(userId, listId, taskId)
 
     fun clearCompletedTasksByList(userId: String, listId: String) =
-        repository.clearCompletedTasksByList(userId, listId)
+        taskRepository.clearCompletedTasksByList(userId, listId)
 }

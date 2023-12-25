@@ -19,11 +19,11 @@ WHERE user_id = ?
 AND list_id = ?;
 
 insert:
-INSERT INTO Task VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Task VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE Task
-SET label = ?, is_completed = ?, is_starred = ?, details = ?, reminder_date = ?, due_date = ?, last_modified = ?
+SET label = ?, is_completed = ?, is_starred = ?, details = ?, reminder_date = ?, due_date = ?, last_modified = ?, category = ?
 WHERE id = ?
 AND user_id = ?
 AND list_id = ?;

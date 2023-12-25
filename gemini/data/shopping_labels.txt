@@ -1,0 +1,16 @@
+0=Fruits
+1=Vegetables
+2=Dairy
+3=Bread & Bakery
+4=Meat & Fish
+5=Meat Alternatives
+6=Canned Goods
+7=Pasta, Rice & Cereals
+8=Condiments & Sauces
+9=Herbs & Spices
+10=Frozen Foods
+11=Snacks
+12=Drinks
+13=Household & Cleaning Supplies
+14=Personal Care
+15=Pet Care

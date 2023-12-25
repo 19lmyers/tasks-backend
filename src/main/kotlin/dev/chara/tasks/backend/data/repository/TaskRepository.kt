@@ -51,7 +51,8 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
                     last_modified = task.lastModified,
                     reminder_fired = null,
                     date_created = Clock.System.now(),
-                    ordinal = maxOrdinal ?: 0
+                    ordinal = maxOrdinal ?: 0,
+                    category = task.category
                 )
             }
             .mapError { DataError.DatabaseError(it) }
@@ -71,6 +72,7 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
                     due_date = task.dueDate,
                     last_modified = task.lastModified,
                     id = taskId,
+                    category = task.category,
                     user_id = userId,
                     list_id = listId
                 )

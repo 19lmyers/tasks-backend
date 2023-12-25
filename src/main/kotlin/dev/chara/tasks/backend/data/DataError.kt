@@ -8,4 +8,8 @@ sealed class DataError(open val throwable: Throwable) : ApplicationError {
     data class IOError(override val throwable: Throwable) : DataError(throwable)
 
     data class SMTPError(override val throwable: Throwable) : DataError(throwable)
+
+    data class SocketError(override val throwable: Throwable) : DataError(throwable)
 }
+
+data class GeminiError(val statusCode: Int) : ApplicationError

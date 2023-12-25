@@ -1,0 +1,3 @@
+ALTER TABLE Task ADD COLUMN category TEXT AFTER ordinal;
+
+UPDATE DbMeta SET db_version = 6;

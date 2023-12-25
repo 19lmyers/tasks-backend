@@ -50,7 +50,8 @@ class TaskListRepository(databaseFactory: DatabaseFactory) {
                     show_index_numbers = taskList.showIndexNumbers,
                     date_created = Clock.System.now(),
                     last_modified = taskList.lastModified,
-                    ordinal = maxOrdinal ?: 0
+                    ordinal = maxOrdinal ?: 0,
+                    classifier_type = taskList.classifierType
                 )
             }
             .mapError { DataError.DatabaseError(it) }
@@ -70,6 +71,7 @@ class TaskListRepository(databaseFactory: DatabaseFactory) {
                     sort_direction = taskList.sortDirection,
                     show_index_numbers = taskList.showIndexNumbers,
                     last_modified = taskList.lastModified,
+                    classifier_type = taskList.classifierType,
                     id = listId,
                     user_id = userId
                 )

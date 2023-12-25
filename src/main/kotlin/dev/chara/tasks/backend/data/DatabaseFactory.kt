@@ -54,7 +54,8 @@ class DatabaseFactory(dotenv: Dotenv) {
                 sort_typeAdapter = EnumColumnAdapter(),
                 sort_directionAdapter = EnumColumnAdapter(),
                 colorAdapter = EnumColumnAdapter(),
-                iconAdapter = EnumColumnAdapter()
+                iconAdapter = EnumColumnAdapter(),
+                classifier_typeAdapter = EnumColumnAdapter()
             )
         )
 

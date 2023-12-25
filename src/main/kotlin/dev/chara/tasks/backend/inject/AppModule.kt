@@ -2,7 +2,9 @@ package dev.chara.tasks.backend.inject
 
 import dev.chara.tasks.backend.data.AssetManager
 import dev.chara.tasks.backend.data.DatabaseFactory
+import dev.chara.tasks.backend.data.GeminiJobScheduler
 import dev.chara.tasks.backend.data.MailSender
+import dev.chara.tasks.backend.data.client.GeminiClient
 import dev.chara.tasks.backend.data.repository.*
 import dev.chara.tasks.backend.domain.auth.JwtProvider
 import dev.chara.tasks.backend.domain.service.FirebaseTokenService
@@ -27,6 +29,9 @@ fun appModule() = module {
 
     single { MailSender(get()) }
 
+    single { GeminiClient(get()) }
+    single { GeminiJobScheduler() }
+
     single { UserRepository(get()) }
     single { TaskListRepository(get()) }
     single { TaskRepository(get()) }
@@ -34,7 +39,7 @@ fun appModule() = module {
     single { FirebaseTokenRepository(get()) }
 
     single { UserService(get(), get(), get(), get()) }
-    single { TaskListService(get()) }
-    single { TaskService(get()) }
+    single { TaskListService(get(), get()) }
+    single { TaskService(get(), get(), get()) }
     single { FirebaseTokenService(get()) }
 }

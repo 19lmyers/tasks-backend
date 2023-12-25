@@ -62,6 +62,10 @@ dependencies {
 
     implementation(libs.apache.commons.email)
 
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.websockets)
+
     testImplementation(libs.kotlin.test)
     testImplementation(libs.ktor.server.test)
     testImplementation(libs.ktor.client.content.negotiation)
@@ -75,7 +79,7 @@ sqldelight {
             dialect(libs.sqldelight.dialect)
 
             packageName.set("dev.chara.tasks.backend.data.sql")
-            version = 4
+            version = 6
 
             deriveSchemaFromMigrations.set(true)
             verifyMigrations.set(true)

@@ -1,0 +1,5 @@
+import dev.chara.tasks.backend.domain.model.TaskList.ClassifierType;
+
+ALTER TABLE TaskList ADD COLUMN classifier_type TEXT AS ClassifierType AFTER ordinal;
+
+UPDATE DbMeta SET db_version = 5;

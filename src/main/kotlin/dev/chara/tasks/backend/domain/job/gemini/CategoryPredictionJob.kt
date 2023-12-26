@@ -4,9 +4,7 @@ import com.github.michaelbull.result.coroutines.binding.binding
 import com.github.michaelbull.result.mapBoth
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.toErrorIfNull
-import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.Message
-import com.google.firebase.messaging.MessagingErrorCode
+import com.google.firebase.messaging.*
 import dev.chara.tasks.backend.data.client.GeminiClient
 import dev.chara.tasks.backend.data.repository.FirebaseTokenRepository
 import dev.chara.tasks.backend.data.repository.TaskRepository
@@ -63,6 +61,13 @@ class CategoryPredictionJob : CoroutineJob() {
 
                     val messages = mutableListOf<Pair<String, Message>>()
 
+                    val alert =
+                        ApsAlert.builder().setTitle("Category updated").setBody(task.label).build()
+
+                    val aps = Aps.builder().setContentAvailable(true).setAlert(alert).build()
+
+                    val apnsConfig = ApnsConfig.builder().setAps(aps).build()
+
                     firebaseTokenRepository
                         .getForUser(userId)
                         .mapBoth(
@@ -73,6 +78,7 @@ class CategoryPredictionJob : CoroutineJob() {
                                             .putData(DATA_MESSAGE_TYPE, MESSAGE_TYPE_PREDICTION)
                                             .putData(DATA_TASK_ID, taskId)
                                             .putData(DATA_TASK_CATEGORY, prediction)
+                                            .setApnsConfig(apnsConfig)
                                             .setToken(token)
                                             .build()
 

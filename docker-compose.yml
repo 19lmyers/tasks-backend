@@ -30,7 +30,7 @@ services:
       TASKS_AUTH_PUBLIC_KEY_ID: "${TASKS_AUTH_PUBLIC_KEY_ID}"
       TASKS_AUTH_PRIVATE_KEY_PATH: "/run/secrets/ssl_private_key_jwk"
       TASKS_DATA_SOURCE_URL: "jdbc:mariadb://mariadb:3306/tasks"
-      TASKS_BASE_URL: "https://tasks-api.chara.dev"
+      TASKS_BASE_URL: "https://dominaria.chara.dev:8804"
       TASKS_ASSETS_FOLDER: "/assets"
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"

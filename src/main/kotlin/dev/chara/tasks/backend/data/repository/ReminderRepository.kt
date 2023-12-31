@@ -13,7 +13,7 @@ class ReminderRepository(databaseFactory: DatabaseFactory) {
         runCatching { database.reminderQueries.get().executeAsList() }
             .mapError { DataError.DatabaseError(it) }
 
-    fun setFired(userId: String, taskId: String) =
-        runCatching { database.reminderQueries.setFired(userId, taskId) }
+    fun setFired(taskId: String) =
+        runCatching { database.reminderQueries.setFired(taskId) }
             .mapError { DataError.DatabaseError(it) }
 }

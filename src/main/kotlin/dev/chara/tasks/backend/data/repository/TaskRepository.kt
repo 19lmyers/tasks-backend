@@ -18,30 +18,29 @@ import kotlinx.datetime.Instant
 class TaskRepository(databaseFactory: DatabaseFactory) {
     private val database = databaseFactory.getDatabase()
 
-    fun getByIds(userId: String, listId: String, taskId: String) =
-        runCatching { database.taskQueries.getByIds(taskId, userId, listId).executeAsOneOrNull() }
+    fun getById(taskId: String) =
+        runCatching { database.taskQueries.getById(taskId).executeAsOneOrNull() }
             .mapError { DataError.DatabaseError(it) }
             .map { it?.toModel() }
 
-    fun getByList(userId: String, listId: String) =
-        runCatching { database.taskQueries.getByList(userId, listId).executeAsList() }
+    fun getByList(listId: String) =
+        runCatching { database.taskQueries.getByList(listId).executeAsList() }
             .mapError { DataError.DatabaseError(it) }
             .map { tasks -> tasks.map { it.toModel() } }
 
-    private fun getMaxOrdinal(userId: String, listId: String) =
-        runCatching { database.taskQueries.getMaxOrdinal(userId, listId).executeAsOneOrNull()?.MAX }
+    private fun getMaxOrdinal(listId: String) =
+        runCatching { database.taskQueries.getMaxOrdinal(listId).executeAsOneOrNull()?.MAX }
             .mapError { DataError.DatabaseError(it) }
 
     fun insert(userId: String, listId: String, task: Task) = binding {
         val id = UUID.randomUUID().toString()
 
-        val maxOrdinal = getMaxOrdinal(userId, listId).bind()
+        val maxOrdinal = getMaxOrdinal(listId).bind()
 
         runCatching {
                 database.taskQueries.insert(
                     id,
-                    userId,
-                    listId,
+                    list_id = listId,
                     label = task.label,
                     is_completed = task.isCompleted,
                     is_starred = task.isStarred,
@@ -61,7 +60,7 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
         id
     }
 
-    fun update(userId: String, listId: String, taskId: String, task: Task) =
+    fun update(taskId: String, task: Task) =
         runCatching {
                 database.taskQueries.update(
                     label = task.label,
@@ -72,19 +71,16 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
                     due_date = task.dueDate,
                     last_modified = task.lastModified,
                     id = taskId,
-                    category = task.category,
-                    user_id = userId,
-                    list_id = listId
+                    category = task.category
                 )
             }
             .mapError { DataError.DatabaseError(it) }
 
-    fun move(userId: String, newListId: String, taskId: String, lastModified: Instant) =
-        runCatching { database.taskQueries.move(newListId, lastModified, taskId, userId) }
+    fun move(newListId: String, taskId: String, lastModified: Instant) =
+        runCatching { database.taskQueries.move(newListId, lastModified, taskId) }
             .mapError { DataError.DatabaseError(it) }
 
     fun reorder(
-        userId: String,
         listId: String,
         taskId: String,
         fromIndex: Int,
@@ -93,7 +89,6 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
     ) =
         runCatching {
                 database.taskQueries.reorder(
-                    user_id = userId,
                     list_id = listId,
                     task_id = taskId,
                     ordinal = toIndex.toLong(),
@@ -105,11 +100,10 @@ class TaskRepository(databaseFactory: DatabaseFactory) {
             }
             .mapError { DataError.DatabaseError(it) }
 
-    fun delete(userId: String, listId: String, taskId: String) =
-        runCatching { database.taskQueries.delete(taskId, userId, listId) }
-            .mapError { DataError.DatabaseError(it) }
+    fun delete(taskId: String) =
+        runCatching { database.taskQueries.delete(taskId) }.mapError { DataError.DatabaseError(it) }
 
-    fun clearCompletedTasksByList(userId: String, listId: String) =
-        runCatching { database.taskQueries.clearCompletedByList(userId, listId) }
+    fun clearCompletedTasksByList(listId: String) =
+        runCatching { database.taskQueries.clearCompletedByList(listId) }
             .mapError { DataError.DatabaseError(it) }
 }

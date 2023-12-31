@@ -3,6 +3,23 @@ SELECT *
 FROM FirebaseToken
 WHERE user_id = ?;
 
+getForTask:
+SELECT ft.*
+FROM FirebaseToken ft
+INNER JOIN TaskList tl
+ON tl.owner_id = ft.user_id
+INNER JOIN Task t
+ON t.list_id = tl.id
+WHERE t.id = :task_id
+UNION
+SELECT ft.*
+FROM FirebaseToken ft
+INNER JOIN TaskListMembers tlm
+ON tlm.user_id = ft.user_id
+INNER JOIN Task t
+ON t.list_id = tlm.list_id
+WHERE t.id = :task_id;
+
 update:
 REPLACE INTO FirebaseToken VALUES (?, ?, ?);
 

@@ -34,6 +34,28 @@ suspend fun PipelineContext<Unit, ApplicationCall>.handleError(error: Applicatio
         DomainError.TaskNotFound -> {
             call.respondText("No task with ID", status = HttpStatusCode.BadRequest)
         }
+        DomainError.InviteTokenNotFound,
+        DomainError.InviteTokenExpired -> {
+            call.respondText("Invalid invite token", status = HttpStatusCode.BadRequest)
+        }
+        DomainError.EmailUnverified -> {
+            call.respondText(
+                "You must verify your email to do that",
+                status = HttpStatusCode.BadRequest
+            )
+        }
+        DomainError.ListAccessDenied -> {
+            call.respondText(
+                "You don't have permission to access this list",
+                status = HttpStatusCode.Forbidden
+            )
+        }
+        DomainError.ListOwnershipDenied -> {
+            call.respondText("You aren't the owner of this list", status = HttpStatusCode.Forbidden)
+        }
+        DomainError.UserIsListOwner -> {
+            call.respondText("You are the owner of this list", status = HttpStatusCode.Forbidden)
+        }
         is DataError -> {
             call.respondText(
                 "An unexpected error occurred",

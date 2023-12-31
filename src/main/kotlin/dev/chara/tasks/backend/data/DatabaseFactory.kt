@@ -40,6 +40,7 @@ class DatabaseFactory(dotenv: Dotenv) {
             databaseDriver,
             EmailVerificationToken.Adapter(expiry_timeAdapter = instantAdapter),
             FirebaseToken.Adapter(timestampAdapter = instantAdapter),
+            ListInviteToken.Adapter(expiry_timeAdapter = instantAdapter),
             PasswordResetToken.Adapter(expiry_timeAdapter = instantAdapter),
             Task.Adapter(
                 reminder_dateAdapter = instantAdapter,
@@ -51,11 +52,14 @@ class DatabaseFactory(dotenv: Dotenv) {
             TaskList.Adapter(
                 last_modifiedAdapter = instantAdapter,
                 date_createdAdapter = instantAdapter,
-                sort_typeAdapter = EnumColumnAdapter(),
-                sort_directionAdapter = EnumColumnAdapter(),
                 colorAdapter = EnumColumnAdapter(),
                 iconAdapter = EnumColumnAdapter(),
                 classifier_typeAdapter = EnumColumnAdapter()
+            ),
+            TaskListPrefs.Adapter(
+                sort_typeAdapter = EnumColumnAdapter(),
+                sort_directionAdapter = EnumColumnAdapter(),
+                last_modifiedAdapter = instantAdapter
             )
         )
 

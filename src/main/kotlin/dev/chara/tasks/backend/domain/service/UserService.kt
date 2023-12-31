@@ -98,6 +98,9 @@ class UserService(
         }
     }
 
+    fun ensureVerified(id: String) =
+        repository.ensureVerified(id).toErrorIfNull { DomainError.EmailUnverified }
+
     fun getByEmail(email: String) =
         repository.getByEmail(email).toErrorIfNull { DomainError.UserNotFound }.map { it.toModel() }
 

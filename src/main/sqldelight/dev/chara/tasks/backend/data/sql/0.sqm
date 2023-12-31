@@ -1,8 +1,9 @@
-import kotlinx.datetime.Instant;
+import dev.chara.tasks.backend.domain.model.TaskList.ClassifierType;
 import dev.chara.tasks.backend.domain.model.TaskList.Color;
 import dev.chara.tasks.backend.domain.model.TaskList.Icon;
-import dev.chara.tasks.backend.domain.model.TaskList.SortDirection;
-import dev.chara.tasks.backend.domain.model.TaskList.SortType;
+import dev.chara.tasks.backend.domain.model.TaskListPrefs.SortDirection;
+import dev.chara.tasks.backend.domain.model.TaskListPrefs.SortType;
+import kotlinx.datetime.Instant;
 
 CREATE TABLE IF NOT EXISTS DbMeta (
     db_version INTEGER PRIMARY KEY NOT NULL DEFAULT 1
@@ -17,6 +18,7 @@ WHERE NOT EXISTS (
 CREATE TABLE IF NOT EXISTS User (
     id VARCHAR(36) PRIMARY KEY NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     hashed_password BLOB NOT NULL,
 
     display_name TEXT NOT NULL,
@@ -25,7 +27,7 @@ CREATE TABLE IF NOT EXISTS User (
 
 CREATE TABLE IF NOT EXISTS TaskList (
     id VARCHAR(36) PRIMARY KEY NOT NULL,
-    user_id VARCHAR(36) NOT NULL,
+    owner_id VARCHAR(36) NOT NULL,
 
     title TEXT NOT NULL,
 
@@ -33,21 +35,45 @@ CREATE TABLE IF NOT EXISTS TaskList (
     icon TEXT AS Icon,
     description TEXT,
 
-    is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    date_created DATETIME(6) AS Instant NOT NULL,
+    last_modified DATETIME(6) AS Instant NOT NULL,
+
+    classifier_type TEXT AS ClassifierType,
+
+    FOREIGN KEY (owner_id) REFERENCES User(id)
+);
+
+CREATE TABLE IF NOT EXISTS TaskListMembers (
+    list_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+
+    PRIMARY KEY (list_id, user_id),
+
+    FOREIGN KEY (list_id) REFERENCES TaskList(id),
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+CREATE TABLE IF NOT EXISTS TaskListPrefs (
+    list_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+
     show_index_numbers BOOLEAN NOT NULL DEFAULT FALSE,
 
     sort_type TEXT AS SortType NOT NULL,
     sort_direction TEXT AS SortDirection NOT NULL,
 
-    date_created DATETIME(6) AS Instant NOT NULL,
+    ordinal INTEGER NOT NULL,
+
     last_modified DATETIME(6) AS Instant NOT NULL,
 
+    PRIMARY KEY (list_id, user_id),
+
+    FOREIGN KEY (list_id) REFERENCES TaskList(id),
     FOREIGN KEY (user_id) REFERENCES User(id)
 );
 
 CREATE TABLE IF NOT EXISTS Task (
     id VARCHAR(36) PRIMARY KEY NOT NULL,
-    user_id VARCHAR(36) NOT NULL,
     list_id VARCHAR(36) NOT NULL,
 
     label TEXT NOT NULL,
@@ -66,15 +92,15 @@ CREATE TABLE IF NOT EXISTS Task (
 
     ordinal INTEGER NOT NULL,
 
-    FOREIGN KEY (user_id) REFERENCES User(id),
+    category TEXT,
+
     FOREIGN KEY (list_id) REFERENCES TaskList(id)
 );
 
 CREATE VIEW IF NOT EXISTS Reminder AS
-    SELECT DISTINCT u.id AS user_id, t.id AS task_id, l.title AS list_title, l.color AS list_color, l.icon AS list_icon, t.label AS task_label, t.reminder_date, t.reminder_fired
-    FROM User u, Task t, TaskList l
-    WHERE u.id = t.user_id
-    AND t.list_id = l.id
+    SELECT DISTINCT t.id AS task_id, l.title AS list_title, l.color AS list_color, l.icon AS list_icon, t.label AS task_label, t.reminder_date, t.reminder_fired
+    FROM Task t, TaskList l
+    WHERE t.list_id = l.id
     AND t.is_completed = FALSE
     AND t.reminder_date <= UTC_TIMESTAMP()
     AND (
@@ -96,4 +122,21 @@ CREATE TABLE IF NOT EXISTS PasswordResetToken (
     expiry_time DATETIME(6) AS Instant NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+CREATE TABLE IF NOT EXISTS EmailVerificationToken (
+    verify_token VARCHAR(36) PRIMARY KEY NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+    new_email TEXT UNIQUE NOT NULL,
+    expiry_time DATETIME(6) AS Instant NOT NULL,
+
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+CREATE TABLE IF NOT EXISTS ListInviteToken (
+    invite_token VARCHAR(36) PRIMARY KEY NOT NULL,
+    list_id VARCHAR(36) NOT NULL,
+    expiry_time DATETIME(6) AS Instant NOT NULL,
+
+    FOREIGN KEY (list_id) REFERENCES TaskList(id)
 );

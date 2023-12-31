@@ -31,6 +31,10 @@ sealed class DomainError : ApplicationError {
 
     data object ResetTokenExpired : DomainError()
 
+    data object InviteTokenNotFound : DomainError()
+
+    data object InviteTokenExpired : DomainError()
+
     data object ListTitleRequired : DomainError()
 
     data object ListNotFound : DomainError()
@@ -40,4 +44,10 @@ sealed class DomainError : ApplicationError {
     data object FirebaseTokenRequired : DomainError()
 
     data object RateLimitExceeded : DomainError()
+
+    data object ListAccessDenied : DomainError()
+
+    data object ListOwnershipDenied : DomainError()
+
+    data object UserIsListOwner : DomainError()
 }

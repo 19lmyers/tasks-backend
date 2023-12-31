@@ -7,16 +7,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TaskList(
     val id: String?,
+    val ownerId: String,
     val title: String,
     val color: Color? = null,
     val icon: Icon? = null,
     val description: String? = null,
-    val showIndexNumbers: Boolean = false,
-    val sortType: SortType = SortType.ORDINAL,
-    val sortDirection: SortDirection = SortDirection.ASCENDING,
     val dateCreated: Instant? = null,
     val lastModified: Instant,
-    val ordinal: Int = -1,
     val classifierType: ClassifierType? = null
 ) {
     @Serializable
@@ -62,22 +59,6 @@ data class TaskList(
     }
 
     @Serializable
-    enum class SortType {
-        ORDINAL,
-        LABEL,
-        CATEGORY,
-        DATE_CREATED,
-        UPCOMING,
-        STARRED
-    }
-
-    @Serializable
-    enum class SortDirection {
-        ASCENDING,
-        DESCENDING
-    }
-
-    @Serializable
     enum class ClassifierType(private val consoleName: String) {
         SHOPPING("shopping");
 
@@ -90,15 +71,12 @@ data class TaskList(
 fun DbTaskList.toModel() =
     TaskList(
         id,
+        owner_id,
         title,
         color,
         icon,
         description,
-        show_index_numbers,
-        sort_type,
-        sort_direction,
         date_created,
         last_modified,
-        ordinal,
         classifier_type
     )

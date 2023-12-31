@@ -1,0 +1,16 @@
+getAll:
+SELECT *
+FROM ListInviteToken;
+
+get:
+SELECT *
+FROM ListInviteToken
+WHERE invite_token = ?
+LIMIT 1;
+
+insert:
+INSERT INTO ListInviteToken VALUES (?, ?, ?);
+
+invalidate:
+DELETE FROM ListInviteToken
+WHERE invite_token = ?;

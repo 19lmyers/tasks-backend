@@ -23,7 +23,7 @@ fun Routing.main() {
 }
 
 fun Route.status() {
-    get { call.respondText("[v3] Hello, world!") }
+    get { call.respondText("[v4] Hello, world!") }
 }
 
 fun Route.api() {

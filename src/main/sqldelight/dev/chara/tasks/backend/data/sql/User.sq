@@ -14,6 +14,13 @@ FROM User
 WHERE email = ?
 LIMIT 1;
 
+ensureVerified:
+SELECT id
+FROM User
+WHERE id = :user_id
+AND email_verified = 1
+LIMIT 1;
+
 insert:
 INSERT INTO User (id, email, hashed_password, display_name) VALUES (?, ?, ?, ?);
 

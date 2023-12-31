@@ -81,10 +81,10 @@ suspend fun PipelineContext<Unit, ApplicationCall>.getTasksByList(
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
-            taskService.getTasksByList(userId, listId).bind()
+            taskService.getTasksByList(listId).bind()
         }
         .mapBoth(
             success = { tasks -> call.respond(tasks) },
@@ -107,7 +107,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.postTasksByList(
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
             val task =
@@ -138,7 +138,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.clearTasksByList(
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
             taskService.clearCompletedTasksByList(userId, listId).bind()
@@ -161,15 +161,16 @@ suspend fun PipelineContext<Unit, ApplicationCall>.getTaskByIds(
                     .andThen { principal -> userService.getIdFor(principal) }
                     .bind()
 
+            @Suppress("UNUSED_VARIABLE")
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
             val taskId = call.parameters.getAsResult("taskId").bind()
 
-            taskService.getTaskByIds(userId, listId, taskId).bind()
+            taskService.getTaskById(taskId).bind()
         }
         .mapBoth(
             success = { task -> call.respond(task) },
@@ -189,17 +190,14 @@ suspend fun PipelineContext<Unit, ApplicationCall>.putTaskByIds(
                     .andThen { principal -> userService.getIdFor(principal) }
                     .bind()
 
+            @Suppress("UNUSED_VARIABLE")
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
-            val taskId =
-                call.parameters
-                    .getAsResult("taskId")
-                    .andThen { taskId -> taskService.getIdFor(userId, listId, taskId) }
-                    .bind()
+            val taskId = call.parameters.getAsResult("taskId").bind()
 
             val task =
                 runCatching { call.receive<Task>() }.mapError { WebError.InputInvalid }.bind()
@@ -227,14 +225,10 @@ suspend fun PipelineContext<Unit, ApplicationCall>.deleteTaskByIds(
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
-            val taskId =
-                call.parameters
-                    .getAsResult("taskId")
-                    .andThen { taskId -> taskService.getIdFor(userId, listId, taskId) }
-                    .bind()
+            val taskId = call.parameters.getAsResult("taskId").bind()
 
             taskService.delete(userId, listId, taskId).bind()
         }
@@ -261,21 +255,18 @@ suspend fun PipelineContext<Unit, ApplicationCall>.moveTaskByIds(
             val move =
                 runCatching { call.receive<Move>() }.mapError { WebError.InputInvalid }.bind()
 
+            @Suppress("UNUSED_VARIABLE")
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
-            val taskId =
-                call.parameters
-                    .getAsResult("taskId")
-                    .andThen { taskId -> taskService.getIdFor(userId, listId, taskId) }
-                    .bind()
+            val taskId = call.parameters.getAsResult("taskId").bind()
 
-            val newListId = taskListService.getIdFor(userId, move.newListId).bind()
+            val newListId = taskListService.ensureUserAccess(userId, move.newListId).bind()
 
-            taskService.move(userId, newListId, taskId, move.lastModified).bind()
+            taskService.move(newListId, taskId, move.lastModified).bind()
         }
         .mapBoth(
             success = { call.respondText("Task moved", status = HttpStatusCode.OK) },
@@ -301,24 +292,13 @@ suspend fun PipelineContext<Unit, ApplicationCall>.reorderTaskByIds(
             val listId =
                 call.parameters
                     .getAsResult("listId")
-                    .andThen { listId -> taskListService.getIdFor(userId, listId) }
+                    .andThen { listId -> taskListService.ensureUserAccess(userId, listId) }
                     .bind()
 
-            val taskId =
-                call.parameters
-                    .getAsResult("taskId")
-                    .andThen { taskId -> taskService.getIdFor(userId, listId, taskId) }
-                    .bind()
+            val taskId = call.parameters.getAsResult("taskId").bind()
 
             taskService
-                .reorder(
-                    userId,
-                    listId,
-                    taskId,
-                    reorder.fromIndex,
-                    reorder.toIndex,
-                    reorder.lastModified
-                )
+                .reorder(listId, taskId, reorder.fromIndex, reorder.toIndex, reorder.lastModified)
                 .bind()
         }
         .mapBoth(

@@ -7,6 +7,7 @@ import com.github.michaelbull.result.runCatching
 import dev.chara.tasks.backend.data.DataError
 import dev.chara.tasks.backend.data.DatabaseFactory
 import dev.chara.tasks.backend.domain.model.TaskList
+import dev.chara.tasks.backend.domain.model.TaskListPrefs
 import dev.chara.tasks.backend.domain.model.toModel
 import java.util.*
 import kotlin.math.max
@@ -18,8 +19,23 @@ import kotlinx.datetime.Instant
 class TaskListRepository(databaseFactory: DatabaseFactory) {
     private val database = databaseFactory.getDatabase()
 
-    fun getByIds(userId: String, listId: String) =
-        runCatching { database.taskListQueries.getByIds(listId, userId).executeAsOneOrNull() }
+    fun ensureAccess(userId: String, listId: String) =
+        runCatching { database.taskListQueries.ensureAccess(listId, userId).executeAsOneOrNull() }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun ensureOwnership(userId: String, listId: String) =
+        runCatching {
+                database.taskListQueries.ensureOwnership(listId, userId).executeAsOneOrNull()
+            }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun getById(listId: String) =
+        runCatching { database.taskListQueries.getById(listId).executeAsOneOrNull() }
+            .mapError { DataError.DatabaseError(it) }
+            .map { it?.toModel() }
+
+    fun getPrefsByIds(userId: String, listId: String) =
+        runCatching { database.taskListQueries.getPrefsByIds(listId, userId).executeAsOneOrNull() }
             .mapError { DataError.DatabaseError(it) }
             .map { it?.toModel() }
 
@@ -32,26 +48,32 @@ class TaskListRepository(databaseFactory: DatabaseFactory) {
         runCatching { database.taskListQueries.getMaxOrdinal(userId).executeAsOneOrNull()?.MAX }
             .mapError { DataError.DatabaseError(it) }
 
-    fun insert(userId: String, taskList: TaskList) = binding {
+    fun insert(userId: String, taskList: TaskList, prefs: TaskListPrefs) = binding {
         val id = UUID.randomUUID().toString()
 
         val maxOrdinal = getMaxOrdinal(userId).bind()
 
         runCatching {
                 database.taskListQueries.insert(
-                    id,
-                    userId,
-                    taskList.title,
+                    id = id,
+                    owner_id = userId,
+                    title = taskList.title,
                     color = taskList.color,
                     icon = taskList.icon,
                     description = taskList.description,
-                    sort_type = TaskList.SortType.ORDINAL,
-                    sort_direction = TaskList.SortDirection.ASCENDING,
-                    show_index_numbers = taskList.showIndexNumbers,
                     date_created = Clock.System.now(),
                     last_modified = taskList.lastModified,
-                    ordinal = maxOrdinal ?: 0,
                     classifier_type = taskList.classifierType
+                )
+
+                database.taskListQueries.insertPrefs(
+                    list_id = id,
+                    user_id = userId,
+                    sort_type = TaskListPrefs.SortType.ORDINAL,
+                    sort_direction = TaskListPrefs.SortDirection.ASCENDING,
+                    show_index_numbers = prefs.showIndexNumbers,
+                    ordinal = maxOrdinal ?: 0,
+                    last_modified = taskList.lastModified
                 )
             }
             .mapError { DataError.DatabaseError(it) }
@@ -60,19 +82,28 @@ class TaskListRepository(databaseFactory: DatabaseFactory) {
         id
     }
 
-    fun update(userId: String, listId: String, taskList: TaskList) =
+    fun update(listId: String, taskList: TaskList) =
         runCatching {
                 database.taskListQueries.update(
                     title = taskList.title,
                     color = taskList.color,
                     icon = taskList.icon,
                     description = taskList.description,
-                    sort_type = taskList.sortType,
-                    sort_direction = taskList.sortDirection,
-                    show_index_numbers = taskList.showIndexNumbers,
                     last_modified = taskList.lastModified,
                     classifier_type = taskList.classifierType,
-                    id = listId,
+                    list_id = listId,
+                )
+            }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun updateListPrefs(userId: String, listId: String, prefs: TaskListPrefs) =
+        runCatching {
+                database.taskListQueries.updatePrefs(
+                    sort_type = prefs.sortType,
+                    sort_direction = prefs.sortDirection,
+                    show_index_numbers = prefs.showIndexNumbers,
+                    last_modified = prefs.lastModified,
+                    list_id = listId,
                     user_id = userId
                 )
             }
@@ -98,10 +129,37 @@ class TaskListRepository(databaseFactory: DatabaseFactory) {
             }
             .mapError { DataError.DatabaseError(it) }
 
-    fun delete(userId: String, listId: String) =
+    fun getProfilesByList(listId: String) =
+        runCatching { database.taskListQueries.getMembers(listId).executeAsList() }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun addMember(userId: String, listId: String) = binding {
+        val maxOrdinal = getMaxOrdinal(userId).bind()
+
         runCatching {
-                database.taskQueries.deleteByList(userId, listId)
-                database.taskListQueries.delete(listId, userId)
+                database.taskListQueries.addMember(listId, userId)
+                database.taskListQueries.insertPrefs(
+                    list_id = listId,
+                    user_id = userId,
+                    sort_type = TaskListPrefs.SortType.ORDINAL,
+                    sort_direction = TaskListPrefs.SortDirection.ASCENDING,
+                    show_index_numbers = false,
+                    ordinal = maxOrdinal ?: 0,
+                    last_modified = Clock.System.now()
+                )
+            }
+            .mapError { DataError.DatabaseError(it) }
+            .bind()
+    }
+
+    fun removeMember(userId: String, listId: String) =
+        runCatching { database.taskListQueries.removeMember(listId, userId) }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun delete(listId: String) =
+        runCatching {
+                database.taskQueries.deleteByList(listId)
+                database.taskListQueries.delete(listId)
             }
             .mapError { DataError.DatabaseError(it) }
 }

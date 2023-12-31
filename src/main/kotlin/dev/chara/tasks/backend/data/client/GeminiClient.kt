@@ -38,7 +38,7 @@ class GeminiClient(dotenv: Dotenv) {
                 val payload = Json.decodeFromString<Payload>(json)
 
                 if (payload.status == 0) {
-                    onResult(Ok(payload.result!!))
+                    onResult(Ok(payload.result))
                 } else {
                     onResult(Err(GeminiError(payload.status)))
                 }

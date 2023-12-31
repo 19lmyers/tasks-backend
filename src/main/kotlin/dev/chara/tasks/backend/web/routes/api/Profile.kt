@@ -4,6 +4,7 @@ import com.github.michaelbull.result.*
 import com.github.michaelbull.result.coroutines.binding.binding
 import dev.chara.tasks.backend.domain.model.Profile
 import dev.chara.tasks.backend.domain.service.UserService
+import dev.chara.tasks.backend.util.getAsResult
 import dev.chara.tasks.backend.web.WebError
 import dev.chara.tasks.backend.web.logTrace
 import io.ktor.http.*
@@ -22,8 +23,12 @@ fun Route.profile() {
 
     route("/profile") {
         get {
-            logTrace("Fetching profile")
+            logTrace("Fetching profile for current user")
             get(userService)
+        }
+        get("/{id}") {
+            logTrace("Fetching profile for specific user")
+            getSpecific(userService)
         }
         put {
             logTrace("Updating profile")
@@ -42,6 +47,19 @@ suspend fun PipelineContext<Unit, ApplicationCall>.get(userService: UserService)
         .toResultOr { WebError.PrincipalInvalid }
         .andThen { principal -> userService.getIdFor(principal) }
         .andThen { id -> userService.getAsProfile(id) }
+        .mapBoth(
+            success = { profile -> call.respond(profile) },
+            failure = { error -> handleError(error) }
+        )
+
+suspend fun PipelineContext<Unit, ApplicationCall>.getSpecific(userService: UserService) =
+    call
+        .principal<JWTPrincipal>()
+        .toResultOr { WebError.PrincipalInvalid }
+        .andThen { principal -> userService.getIdFor(principal) }
+        .andThen { id -> userService.ensureVerified(id) }
+        .andThen { call.parameters.getAsResult("id") }
+        .andThen { userId -> userService.getAsProfile(userId) }
         .mapBoth(
             success = { profile -> call.respond(profile) },
             failure = { error -> handleError(error) }
@@ -74,6 +92,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.uploadPhoto(userService: User
                     .principal<JWTPrincipal>()
                     .toResultOr { WebError.PrincipalInvalid }
                     .andThen { principal -> userService.getIdFor(principal) }
+                    .andThen { id -> userService.ensureVerified(id) }
                     .bind()
 
             val photoBytes =

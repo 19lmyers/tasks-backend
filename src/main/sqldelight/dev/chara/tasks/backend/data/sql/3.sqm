@@ -1,3 +1,0 @@
-ALTER TABLE TaskList ADD COLUMN ordinal INTEGER NOT NULL AFTER last_modified;
-
-UPDATE DbMeta SET db_version = 4;

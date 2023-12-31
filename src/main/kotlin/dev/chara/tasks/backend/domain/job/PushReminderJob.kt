@@ -42,7 +42,7 @@ class PushReminderJob : CoroutineJob() {
                         val apnsConfig = ApnsConfig.builder().setAps(aps).build()
 
                         firebaseTokenRepository
-                            .getForUser(reminder.user_id)
+                            .getForTask(reminder.task_id)
                             .mapBoth(
                                 success = { userTokens ->
                                     for (token in userTokens) {
@@ -66,9 +66,9 @@ class PushReminderJob : CoroutineJob() {
 
                                         messages.add(token to message)
 
-                                        reminderRepository
-                                            .setFired(reminder.user_id, reminder.task_id)
-                                            .mapError { logger.error(it.throwable) }
+                                        reminderRepository.setFired(reminder.task_id).mapError {
+                                            logger.error(it.throwable)
+                                        }
                                     }
                                 },
                                 failure = { logger.error(it.throwable) }

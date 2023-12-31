@@ -15,6 +15,11 @@ class FirebaseTokenRepository(databaseFactory: DatabaseFactory) {
             .mapError { DataError.DatabaseError(it) }
             .map { tasks -> tasks.map { it.fcm_token } }
 
+    fun getForTask(taskId: String) =
+        runCatching { database.firebaseTokenQueries.getForTask(taskId).executeAsList() }
+            .mapError { DataError.DatabaseError(it) }
+            .map { tasks -> tasks.map { it.fcm_token } }
+
     fun link(userId: String, fcmToken: String) =
         runCatching { database.firebaseTokenQueries.update(fcmToken, userId, Clock.System.now()) }
             .mapError { DataError.DatabaseError(it) }

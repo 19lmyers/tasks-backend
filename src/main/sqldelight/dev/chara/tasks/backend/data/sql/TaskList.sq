@@ -1,43 +1,132 @@
-getByIds:
+ensureAccess:
+SELECT tl.id
+FROM TaskList tl
+WHERE tl.id = :list_id
+AND tl.owner_id = :user_id
+UNION
+SELECT tlm.list_id
+FROM TaskListMembers tlm
+WHERE tlm.list_id = :list_id
+AND tlm.user_id = :user_id
+LIMIT 1;
+
+ensureOwnership:
+SELECT tl.id
+FROM TaskList tl
+WHERE tl.id = :list_id
+AND tl.owner_id = :user_id
+LIMIT 1;
+
+getById:
 SELECT *
 FROM TaskList
 WHERE id = ?
-AND user_id = ?
+LIMIT 1;
+
+getPrefsByIds:
+SELECT *
+FROM TaskListPrefs prefs
+WHERE prefs.list_id = ?
+AND prefs.user_id = ?
 LIMIT 1;
 
 getByUser:
-SELECT *
-FROM TaskList
-WHERE user_id = ?
-ORDER BY ordinal ASC;
+SELECT tl.*
+FROM (
+    SELECT tl_o.*
+    FROM TaskList tl_o
+    WHERE tl_o.owner_id = :user_id
+    UNION
+    SELECT tl_j.*
+    FROM TaskList tl_j
+    INNER JOIN TaskListMembers tlm
+    ON tlm.list_id = tl_j.id
+    WHERE tlm.user_id = :user_id
+) tl
+INNER JOIN TaskListPrefs prefs
+ON prefs.list_id = tl.id
+WHERE prefs.user_id = :user_id
+ORDER BY prefs.ordinal ASC;
 
 getMaxOrdinal:
-SELECT MAX(tl.ordinal)
-FROM TaskList tl
-WHERE user_id = ?;
+SELECT MAX(prefs.ordinal)
+FROM (
+    SELECT tl_o.*
+    FROM TaskList tl_o
+    WHERE tl_o.owner_id = :user_id
+    UNION
+    SELECT tl_j.*
+    FROM TaskList tl_j
+    INNER JOIN TaskListMembers tlm
+    ON tlm.list_id = tl_j.id
+    WHERE tlm.user_id = :user_id
+) tl
+INNER JOIN TaskListPrefs prefs
+ON prefs.list_id = tl.id
+WHERE prefs.user_id = :user_id;
 
 insert:
-INSERT INTO TaskList VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO TaskList VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+insertPrefs:
+INSERT INTO TaskListPrefs VALUES(?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE TaskList
-SET title = ?, color = ?, icon = ?, description = ?, sort_type = ?, sort_direction = ?, show_index_numbers = ?, last_modified = ?, classifier_type = ?
-WHERE id = ?
-AND user_id = ?;
+SET title = ?, color = ?, icon = ?, description = ?, last_modified = :last_modified, classifier_type = :classifier_type
+WHERE id = :list_id;
+
+updatePrefs:
+UPDATE TaskListPrefs
+SET show_index_numbers = ?, sort_type = ?, sort_direction = ?, last_modified = :last_modified
+WHERE list_id = :list_id
+AND user_id = :user_id;
 
 reorder {
-   UPDATE TaskList
+   UPDATE TaskListPrefs
    SET ordinal = ordinal + :difference_sign, last_modified = :last_modified
    WHERE user_id = :user_id
    AND ordinal BETWEEN :lower_bound AND :upper_bound;
 
-   UPDATE TaskList
+   UPDATE TaskListPrefs
    SET ordinal = :ordinal + 0, last_modified = :last_modified
    WHERE user_id = :user_id
-   AND id = :list_id;
+   AND list_id = :list_id;
 }
 
-delete:
-DELETE FROM TaskList
-WHERE id = ?
-AND user_id = ?;
+getMembers:
+SELECT *
+FROM User
+WHERE id IN (
+    SELECT user_id
+    FROM TaskListMembers
+    WHERE list_id = :list_id
+)
+ORDER BY display_name;
+
+addMember:
+INSERT INTO TaskListMembers VALUES (?, ?);
+
+removeMember {
+    DELETE FROM TaskListMembers
+    WHERE list_id = :list_id
+    AND user_id = :user_id;
+
+    DELETE FROM TaskListPrefs
+    WHERE list_id = :list_id
+    AND user_id = :user_id;
+}
+
+delete {
+    DELETE FROM ListInviteToken
+    WHERE list_id = :list_id;
+
+    DELETE FROM TaskListPrefs
+    WHERE list_id = :list_id;
+
+    DELETE FROM TaskListMembers
+    WHERE list_id = :list_id;
+
+    DELETE FROM TaskList
+    WHERE id = :list_id;
+}

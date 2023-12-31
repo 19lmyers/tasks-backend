@@ -12,5 +12,4 @@ data class Profile(
     val profilePhotoUri: String?
 )
 
-fun DbUser.toProfile() =
-    Profile(id, email, email_verified ?: false, display_name, profile_photo_uri)
+fun DbUser.toProfile() = Profile(id, email, email_verified, display_name, profile_photo_uri)

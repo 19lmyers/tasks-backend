@@ -12,6 +12,10 @@ import kotlinx.datetime.Clock
 class UserRepository(databaseFactory: DatabaseFactory) {
     private val database = databaseFactory.getDatabase()
 
+    fun ensureVerified(userId: String) =
+        runCatching { database.userQueries.ensureVerified(userId).executeAsOneOrNull() }
+            .mapError { DataError.DatabaseError(it) }
+
     fun getAll() =
         runCatching { database.userQueries.getAll().executeAsList() }
             .mapError { DataError.DatabaseError(it) }
@@ -97,5 +101,28 @@ class UserRepository(databaseFactory: DatabaseFactory) {
 
     fun invalidatePasswordResetToken(resetToken: String) =
         runCatching { database.passwordResetTokenQueries.invalidate(resetToken) }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun getAllListInviteTokens() =
+        runCatching { database.listInviteTokenQueries.getAll().executeAsList() }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun getListInviteToken(inviteToken: String) =
+        runCatching { database.listInviteTokenQueries.get(inviteToken).executeAsOneOrNull() }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun insertListInviteToken(userId: String, inviteToken: String) =
+        runCatching {
+                database.listInviteTokenQueries.insert(
+                    inviteToken,
+                    userId,
+                    Clock.System.now().plus(4.hours)
+                )
+                inviteToken
+            }
+            .mapError { DataError.DatabaseError(it) }
+
+    fun invalidateListInviteToken(inviteToken: String) =
+        runCatching { database.listInviteTokenQueries.invalidate(inviteToken) }
             .mapError { DataError.DatabaseError(it) }
 }

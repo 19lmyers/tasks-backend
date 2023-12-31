@@ -34,7 +34,7 @@ class JobScheduler {
         val job =
             JobBuilder.newJob()
                 .ofType(CategoryPredictionJob::class.java)
-                .usingJobData(CategoryPredictionJob.PARAM_LIST_ID, taskId)
+                .usingJobData(CategoryPredictionJob.PARAM_LIST_ID, listId)
                 .usingJobData(CategoryPredictionJob.PARAM_TASK_ID, taskId)
                 .usingJobData(CategoryPredictionJob.PARAM_TASK_LABEL, label)
                 .build()

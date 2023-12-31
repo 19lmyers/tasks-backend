@@ -3,14 +3,12 @@ package dev.chara.tasks.backend.domain.job
 import com.github.michaelbull.result.binding
 import com.github.michaelbull.result.mapBoth
 import com.github.michaelbull.result.mapError
-import com.github.michaelbull.result.toErrorIfNull
 import com.google.firebase.messaging.*
 import dev.chara.tasks.backend.data.repository.FirebaseTokenRepository
 import dev.chara.tasks.backend.data.repository.TaskListRepository
 import dev.chara.tasks.backend.data.repository.TaskRepository
 import dev.chara.tasks.backend.data.repository.UserRepository
 import dev.chara.tasks.backend.domain.Action
-import dev.chara.tasks.backend.domain.DomainError
 import io.ktor.util.logging.*
 import org.koin.core.component.inject
 import org.quartz.JobExecutionContext
@@ -38,14 +36,9 @@ class NotifyActionJob : CoroutineJob() {
         val action = Action.valueOf(dataMap.getString(PARAM_ACTION))
 
         binding {
-            val task =
-                taskRepository.getById(taskId).toErrorIfNull { DomainError.TaskNotFound }.bind()
+            val task = taskRepository.getById(taskId).bind()
 
-            val taskList =
-                taskListRepository
-                    .getById(task.listId)
-                    .toErrorIfNull { DomainError.ListNotFound }
-                    .bind()
+            val taskList = taskListRepository.getById(listId).bind()
 
             val actor = userRepository.getById(actorId).bind()
 
@@ -54,9 +47,9 @@ class NotifyActionJob : CoroutineJob() {
                     Action.ADD_TASK -> "${actor?.display_name} added"
                     Action.EDIT_TASK -> "${actor?.display_name} edited"
                     Action.REMOVE_TASK -> "${actor?.display_name} removed"
-                    Action.COMPLETE_TASK -> "${actor?.display_name} complete"
+                    Action.COMPLETE_TASK -> "${actor?.display_name} completed"
                     Action.STAR_TASK -> "${actor?.display_name} starred"
-                    Action.PREDICT_TASK_CATEGORY -> "${task.label} → ${task.category}"
+                    Action.PREDICT_TASK_CATEGORY -> "${task?.label} → ${task?.category}"
                     Action.CLEAR_COMPLETED_TASKS ->
                         "${actor?.display_name} deleted all completed tasks"
                     Action.JOIN_LIST -> "${actor?.display_name} joined"
@@ -64,9 +57,13 @@ class NotifyActionJob : CoroutineJob() {
 
             val messages = mutableListOf<Pair<String, Message>>()
 
-            val alert = ApsAlert.builder().setTitle(taskList.title).setBody(body).build()
+            var alert = ApsAlert.builder().setTitle(taskList?.title).setBody(body)
 
-            val aps = Aps.builder().setAlert(alert).build()
+            if (task != null) {
+                alert = alert.setSubtitle(task.label)
+            }
+
+            val aps = Aps.builder().setAlert(alert.build()).build()
 
             val apnsConfig = ApnsConfig.builder().setAps(aps).build()
 
@@ -79,12 +76,12 @@ class NotifyActionJob : CoroutineJob() {
                                 Message.builder()
                                     .putData(DATA_MESSAGE_TYPE, MESSAGE_TYPE_ACTION)
                                     .putData(DATA_TASK_ID, taskId)
-                                    .putData(DATA_TASK_LABEL, task.label)
-                                    .putData(DATA_TASK_CATEGORY, task.category ?: "")
+                                    .putData(DATA_TASK_LABEL, task?.label ?: "")
+                                    .putData(DATA_TASK_CATEGORY, task?.category ?: "")
                                     .putData(DATA_LIST_ID, listId)
-                                    .putData(DATA_LIST_TITLE, taskList.title)
-                                    .putData(DATA_LIST_ICON, taskList.icon?.name ?: "")
-                                    .putData(DATA_LIST_COLOR, taskList.color?.name ?: "")
+                                    .putData(DATA_LIST_TITLE, taskList?.title ?: "")
+                                    .putData(DATA_LIST_ICON, taskList?.icon?.name ?: "")
+                                    .putData(DATA_LIST_COLOR, taskList?.color?.name ?: "")
                                     .putData(DATA_ACTION, action.name)
                                     .putData(DATA_ACTOR_ID, actorId)
                                     .putData(DATA_ACTOR_NAME, actor?.display_name ?: "")

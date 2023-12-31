@@ -46,14 +46,14 @@ class TaskService(
         taskRepository
             .update(taskId, task)
             .onSuccess {
-                jobScheduler.notifyAction(listId, taskId, userId, Action.EDIT_TASK)
-
-                if (existingTask?.isStarred != task.isStarred) {
-                    jobScheduler.notifyAction(listId, taskId, userId, Action.STAR_TASK)
-                }
-
-                if (existingTask?.isCompleted != task.isCompleted) {
+                if (existingTask?.isCompleted != task.isCompleted && task.isCompleted) {
                     jobScheduler.notifyAction(listId, taskId, userId, Action.COMPLETE_TASK)
+                } else if (
+                    existingTask?.isStarred != task.isStarred && !task.isCompleted && task.isStarred
+                ) {
+                    jobScheduler.notifyAction(listId, taskId, userId, Action.STAR_TASK)
+                } else if (!task.isCompleted) {
+                    jobScheduler.notifyAction(listId, taskId, userId, Action.EDIT_TASK)
                 }
             }
             .bind()
